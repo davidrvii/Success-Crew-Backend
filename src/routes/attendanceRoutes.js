@@ -8,9 +8,9 @@ router.get('/crew/:id', authentication, attendanceController.getCrewAttendance)
 
 router.get('/detail/:id', authentication, attendanceController.getAttendanceDetail)
 
-router.post('/add', authentication, authorization, attendanceController.createNewAttendance)
+router.post('/check-in', authentication, authorization, attendanceController.createNewAttendance)
 
-router.patch('/update/:id', authentication, authorization, attendanceController.updateAttendance)
+router.patch('/check-out/:id', authentication, authorization, attendanceController.updateAttendance)
 
 router.delete('/delete/:id', authentication, authorization, attendanceController.deleteAttendance)
 
