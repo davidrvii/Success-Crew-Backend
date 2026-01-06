@@ -16,11 +16,11 @@ router.delete('/delete/:id', authentication, authorization, visitController.dele
 //follow up
 router.get('/:id/follow-up', authentication, visitController.getVisitFollowUp)
 
-router.post('/:id/products-sold', authentication, authorization, visitController.createVisitFollowUp)
+router.post('/:id/follow-up', authentication, authorization, visitController.createVisitFollowUp)
 
 router.patch('/:id/follow-up/:followUpId', authentication, authorization, visitController.updateVisitFollowUp)
 
-router.delete('/:id/products-sold/:productSoldId', authentication, authorization, visitController.deleteVisitFollowUp)
+router.delete('/:id/follow-up/:followUpId', authentication, authorization, visitController.deleteVisitFollowUp)
 
 //product sold
 router.get('/:id/products-sold', authentication, visitController.getVisitProductsSold)
