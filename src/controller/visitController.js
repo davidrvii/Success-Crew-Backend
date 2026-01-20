@@ -532,6 +532,7 @@ module.exports = {
     getVisitFollowUp,
     createVisitFollowUp,
     updateVisitFollowUp,
+    deleteVisitFollowUp,
 
     getVisitProductsSold,
     createVisitProductSold,

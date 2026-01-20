@@ -169,7 +169,6 @@ const createNewAttendance = async (req, res) => {
                 attendance_status,
                 attendance_in,
                 attendance_date,
-                attendance_desc: attendance_desc || null,
             },
         })
 
