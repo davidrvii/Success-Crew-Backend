@@ -1,49 +1,48 @@
-const { verifyToken } =  require('../utils/jwt')
-//const userModel = require('../models/userModels')
-const response = require('../../response')
+const jwt = require("jsonwebtoken");
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
 
 const authentication = async (req, res, next) => {
     try {
-        const  authHeader = req.headers['Authorization'] || req.headers['authorization']
-
-        if(!authHeader || !authHeader.startsWith('Bearer ')) {
-            return response(401, {authenticationHeader: authHeader}, 'Bearer Token Not Provided', res)
-        }
-        
-        const token = authHeader.split(' ')[1]
-        const decoded = verifyToken(token)
-
-        const [userRows] = await userModel.userLogin(decoded.user_email)
-        if(userRows.length === 0){
-            return response(401, {authenticatedUser: userRows}, 'Authentication : User Not Found', res)
-        } 
-
-        const user = userRows[0]
-        req.userData = {
-            user_id: user.user_id,
-            user_email: user.user_email
-        }
-        next()
-    } catch(error){
-        response(500, {error: error}, "Internal Server Error: Authentication Failed", res)
-        throw error
+        const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ message: "Unauthorized" });
     }
-}
 
-const authorization = async (req, res, next) => {
-    try {
-        const[userRows] = await userModel.userLogin(req.userData.user_email)
-        if(userRows.length === 0){
-            return response(403, {authorizedUser: userRows}, "Authorization: Access Denied", res)
-        }
-        next()
-    } catch(error){
-        response(500, {error: error}, "Internal Server Error: Authorization Failed", res)
-        throw error
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ message: "Invalid token" });
     }
-}
+
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
+    const user = await prisma.users.findUnique({
+        where: { user_email: decoded.user_email },
+    });
+
+    if (!user) {
+        return res.status(401).json({ message: "User not found" });
+    }
+
+    req.userData = {
+        user_id: user.user_id,
+        user_email: user.user_email,
+        role_id: user.role_id,
+        office_id: user.office_id,
+    };
+
+    next();
+    } catch (error) {
+    return res.status(401).json({ message: "Unauthorized" });
+    }
+};
+
+const authorization = (req, res, next) => {
+    next();
+};
 
 module.exports = {
     authentication,
-    authorization
-}
+    authorization,
+};

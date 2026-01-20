@@ -1,4 +1,3 @@
-// src/controller/visitController.js
 const prisma = require('../utils/prisma')
 const response = require('../../response')
 
@@ -6,7 +5,6 @@ const response = require('../../response')
  * VISIT
  * ============================ */
 
-// GET /visit/admin
 const getAllVisit = async (req, res) => {
     try {
         const visits = await prisma.visit.findMany({
@@ -30,7 +28,6 @@ const getAllVisit = async (req, res) => {
     }
 }
 
-// GET /visit/detail/:id
 const getVisitDetail = async (req, res) => {
     const id = Number(req.params.id)
 
@@ -60,8 +57,6 @@ const getVisitDetail = async (req, res) => {
     }
 }
 
-// POST /visit/add
-// Body: visitor_id, user_id, visitor_interest, visitor_status
 const createNewVisit = async (req, res) => {
     const { visitor_id, user_id, visitor_interest, visitor_status } = req.body
 
@@ -91,8 +86,6 @@ const createNewVisit = async (req, res) => {
     }
 }
 
-// PATCH /visit/update/:id
-// Partial update untuk field visit saja
 const updateVisit = async (req, res) => {
     const id = Number(req.params.id)
     const { visitor_id, user_id, visitor_interest, visitor_status } = req.body
@@ -129,8 +122,6 @@ const updateVisit = async (req, res) => {
     }
 }
 
-// DELETE /visit/delete/:id
-// Hapus visit + child (follow_up, product_sold, unit_serviced)
 const deleteVisit = async (req, res) => {
     const id = Number(req.params.id)
 
@@ -166,9 +157,6 @@ const deleteVisit = async (req, res) => {
 /* ============================
  * FOLLOW UP (banyak per visit)
  * ============================ */
-
-// GET /visit/:id/follow-up
-// List semua follow up untuk 1 visit
 const getVisitFollowUp = async (req, res) => {
     const visitId = Number(req.params.id)
 
@@ -190,8 +178,6 @@ const getVisitFollowUp = async (req, res) => {
     }
 }
 
-// POST /visit/:id/follow-up   (di route-mu sekarang tertulis /:id/products-sold, tapi controller ini hanya butuh req.params.id)
-/// Body: follow_up_status, follow_up_action
 const createVisitFollowUp = async (req, res) => {
     const visitId = Number(req.params.id)
     const { follow_up_status, follow_up_action } = req.body
@@ -230,8 +216,6 @@ const createVisitFollowUp = async (req, res) => {
     }
 }
 
-// PATCH /visit/:id/follow-up/:followUpId
-// Update follow up status / action
 const updateVisitFollowUp = async (req, res) => {
     const visitId = Number(req.params.id)
     const followUpId = Number(req.params.followUpId)
@@ -267,11 +251,24 @@ const updateVisitFollowUp = async (req, res) => {
     }
 }
 
-/* ============================
- * PRODUCT SOLD (0..n per visit)
- * ============================ */
+const deleteVisitFollowUp = async (req, res) => {
+    const { followUpId } = req.params;
 
-// GET /visit/:id/products-sold
+    await prisma.follow_up.delete({
+        where: { follow_up_id: Number(followUpId) },
+    });
+
+    return response(200, {}, "Follow up deleted", res);
+};
+
+module.exports = {
+    deleteVisitFollowUp,
+};
+
+
+/* ============================
+ * PRODUCT SOLD
+ * ============================ */
 const getVisitProductsSold = async (req, res) => {
     const visitId = Number(req.params.id)
 
@@ -293,8 +290,6 @@ const getVisitProductsSold = async (req, res) => {
     }
 }
 
-// POST /visit/:id/products-sold
-// Body: product_sold_type, product_sold_category
 const createVisitProductSold = async (req, res) => {
     const visitId = Number(req.params.id)
     const { product_sold_type, product_sold_category } = req.body
@@ -333,7 +328,6 @@ const createVisitProductSold = async (req, res) => {
     }
 }
 
-// PATCH /visit/:id/products-sold/:productSoldId
 const updateVisitProductSold = async (req, res) => {
     const visitId = Number(req.params.id)
     const productSoldId = Number(req.params.productSoldId)
@@ -369,7 +363,6 @@ const updateVisitProductSold = async (req, res) => {
     }
 }
 
-// DELETE /visit/:id/products-sold/:productSoldId
 const deleteVisitProductSold = async (req, res) => {
     const visitId = Number(req.params.id)
     const productSoldId = Number(req.params.productSoldId)
@@ -404,7 +397,6 @@ const deleteVisitProductSold = async (req, res) => {
  * UNIT SERVICED (0..n per visit)
  * ============================ */
 
-// GET /visit/:id/units-serviced
 const getVisitUnitsServiced = async (req, res) => {
     const visitId = Number(req.params.id)
 
@@ -426,8 +418,6 @@ const getVisitUnitsServiced = async (req, res) => {
     }
 }
 
-// POST /visit/:id/units-serviced
-// Body: unit_serviced_type, unit_serviced_category
 const createVisitUnitServiced = async (req, res) => {
     const visitId = Number(req.params.id)
     const { unit_serviced_type, unit_serviced_category } = req.body
@@ -466,7 +456,6 @@ const createVisitUnitServiced = async (req, res) => {
     }
 }
 
-// PATCH /visit/:id/units-serviced/:unitServicedId
 const updateVisitUnitServiced = async (req, res) => {
     const visitId = Number(req.params.id)
     const unitServicedId = Number(req.params.unitServicedId)
@@ -502,7 +491,6 @@ const updateVisitUnitServiced = async (req, res) => {
     }
 }
 
-// DELETE /visit/:id/units-serviced/:unitServicedId
 const deleteVisitUnitServiced = async (req, res) => {
     const visitId = Number(req.params.id)
     const unitServicedId = Number(req.params.unitServicedId)
@@ -534,22 +522,22 @@ const deleteVisitUnitServiced = async (req, res) => {
 }
 
 module.exports = {
-    // visit
+
     getAllVisit,
     getVisitDetail,
     createNewVisit,
     updateVisit,
     deleteVisit,
-    // follow up
+
     getVisitFollowUp,
     createVisitFollowUp,
     updateVisitFollowUp,
-    // product sold
+
     getVisitProductsSold,
     createVisitProductSold,
     updateVisitProductSold,
     deleteVisitProductSold,
-    // unit serviced
+
     getVisitUnitsServiced,
     createVisitUnitServiced,
     updateVisitUnitServiced,

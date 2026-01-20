@@ -9,16 +9,20 @@ datasource db {
 }
 
 model attendance {
-  attendance_id     Int       @id @default(autoincrement())
+  attendance_id     Int        @id @default(autoincrement())
   user_id           Int
-  attendance_status String?   @db.VarChar
-  attendance_in     DateTime? @db.Timestamptz(6)
-  attendance_out    DateTime? @db.Timestamptz(6)
-  attendance_desc   String    @db.VarChar
-  attendance_date   DateTime  @db.Date
-  created_at        DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
-  users             users     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  attendance_status String
+  attendance_in     DateTime?
+  attendance_out    DateTime?
+  attendance_date   DateTime
+
+  leaves            leaves[]
+  overtimes         overtimes[]
+
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @default(now())
+
+  users             users      @relation(fields: [user_id], references: [user_id])
 }
 
 model attendance_status {
@@ -46,15 +50,19 @@ model follow_up {
 }
 
 model leaves {
-  leave_id     Int      @id(map: "leave_pk") @default(autoincrement())
-  user_id      Int
-  leave_title  String   @db.VarChar
-  leave_desc   String   @db.VarChar
-  leave_date   DateTime @db.Date
-  leave_status String   @db.VarChar
-  created_at   DateTime @db.Timestamptz(6)
-  updated_at   DateTime @db.Timestamptz(6)
-  users        users    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_leave_fk")
+  leave_id       Int      @id @default(autoincrement())
+  user_id        Int
+  attendance_id  Int
+  leave_title    String
+  leave_desc     String
+  leave_date     DateTime
+  leave_status   String
+
+  created_at     DateTime
+  updated_at     DateTime
+
+  users          users      @relation(fields: [user_id], references: [user_id])
+  attendance     attendance @relation(fields: [attendance_id], references: [attendance_id])
 }
 
 model notifications {
@@ -78,16 +86,20 @@ model offices {
 }
 
 model overtimes {
-  overtime_id     Int       @id(map: "overtime_pk") @default(autoincrement())
+  overtime_id     Int      @id @default(autoincrement())
   user_id         Int
+  attendance_id   Int
   overtime_desc   String
-  overtime_date   DateTime? @db.Date
-  overtime_start  DateTime  @db.Timetz(6)
-  overtime_end    DateTime  @db.Timetz(6)
-  overtime_status String    @db.VarChar
-  created_at      DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
-  users           users     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_overtime_fk")
+  overtime_date   DateTime?
+  overtime_start  DateTime
+  overtime_end    DateTime
+  overtime_status String
+
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @default(now())
+
+  users           users      @relation(fields: [user_id], references: [user_id])
+  attendance      attendance @relation(fields: [attendance_id], references: [attendance_id])
 }
 
 model product_sold {

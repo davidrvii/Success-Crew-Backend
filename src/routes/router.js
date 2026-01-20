@@ -13,9 +13,9 @@ router.get('/', (req, res) => {
 
 router.use('/user', userRoutes)
 router.use('/notification',notificationRoutes)
-router.use('./attendance',attendanceRoutes)
-router.use('./leave', leaveRoutes)
-router.use('./overtime', overtimeRoutes)
-router.use('./visit', visitRoutes)
+router.use('/attendance',attendanceRoutes)
+router.use('/leave', leaveRoutes)
+router.use('/overtime', overtimeRoutes)
+router.use('/visit', visitRoutes)
 
 module.exports = router;

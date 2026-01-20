@@ -175,6 +175,10 @@ const createNewAttendance = async (req, res) => {
 
         return response(201, {attendanceIn: created}, 'Create Attendance (Check-in) Success', res)
     } catch (error) {
+        if (error.code === "P2002") {
+            return response(409, {}, "You've Already Check In Today", res);
+        }
+        
         response(500, {error: error }, 'Server Error', res)
         throw error
     }

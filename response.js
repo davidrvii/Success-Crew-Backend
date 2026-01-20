@@ -1,11 +1,13 @@
-const response = (statusCode, data, message, res) =>{
-    res.status(statusCode).json(
-        {
-            statusCode: statusCode,
-            message: message,
-            ...data,
-        }
-    )
-}
+const response = (statusCode, data = {}, message, res) => {
+    if (!data || typeof data !== "object") {
+    data = {};
+    }
 
-module.exports = response
+    return res.status(statusCode).json({
+    statusCode,
+    message,
+    ...data,
+    });
+};
+
+module.exports = response;

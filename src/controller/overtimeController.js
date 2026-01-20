@@ -70,6 +70,10 @@ const createNewOvertime = async (req, res) => {
         ) {
             return response(400, null, 'Missing Required Field', res)
         }
+        
+        if (!overtime_desc) {
+            return response(400, {}, "Overtime description is required", res);
+        }
 
         const data = {
             user_id: Number(user_id),
