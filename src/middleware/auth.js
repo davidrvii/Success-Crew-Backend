@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
+const response = require("../../response");
 
 const prisma = new PrismaClient();
 
@@ -7,12 +8,12 @@ const authentication = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
     if (!authHeader) {
-        return res.status(401).json({ message: "Unauthorized" });
+        return response(401, null, "Unauthorized", res);
     }
 
     const token = authHeader.split(" ")[1];
     if (!token) {
-        return res.status(401).json({ message: "Invalid token" });
+        return response(401, null, "Invalid token", res);
     }
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
@@ -22,7 +23,7 @@ const authentication = async (req, res, next) => {
     });
 
     if (!user) {
-        return res.status(401).json({ message: "User not found" });
+        return response(401, null, "User not found", res);
     }
 
     req.userData = {
@@ -32,14 +33,14 @@ const authentication = async (req, res, next) => {
         office_id: user.office_id,
     };
 
-    next();
+    return next();
     } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
+        return response(401, null, "Unauthorized", res);
     }
 };
 
 const authorization = (req, res, next) => {
-    next();
+    return next();
 };
 
 module.exports = {
