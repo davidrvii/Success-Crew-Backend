@@ -126,8 +126,7 @@ const getUserBasic = async (req, res, next) => {
 
     return response(200, { userBasic: result }, 'Get User Basic Success', res)
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
