@@ -1,7 +1,7 @@
 const prisma = require('../utils/prisma')
 const response = require('../../response')
 
-const getAllNotification = async (req, res) => {
+const getAllNotification = async (req, res, next) => {
     try {
         const notifications = await prisma.notifications.findMany({
             orderBy: { created_at: 'desc' },
@@ -9,12 +9,11 @@ const getAllNotification = async (req, res) => {
 
         return response(200, {notifications: notifications}, 'Get All Notification Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getHistoryNotification = async (req, res) => {
+const getHistoryNotification = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
@@ -25,12 +24,11 @@ const getHistoryNotification = async (req, res) => {
 
         return response( 200, {notificationsHistory: notifications}, 'Get History Notification Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getNotificationDetail = async (req, res) => {
+const getNotificationDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -44,21 +42,25 @@ const getNotificationDetail = async (req, res) => {
 
         return response(200, {notificationDetail: notification}, 'Get Notification Detail Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createNewNotification = async (req, res) => {
-    const { user_id, notification_title, notification_desc, is_read } = req.body
+const createNewNotification = async (req, res, next) => {
+    const {notification_title, notification_desc, is_read } = req.body
 
     try {
-        if (!user_id || !notification_title || !notification_desc) {
+        const userId = Number(req.userData?.user_id);
+        if (!userId) {
+            return response(401, null, "Unauthorized", res);
+        }
+
+        if (!notification_title || !notification_desc) {
             return response(400, null, 'Missing Required Field', res)
         }
 
         const data = {
-            user_id: Number(user_id),
+            user_id: userId,
             notification_title,
             notification_desc,
             is_read: typeof is_read === 'boolean' ? is_read : false,
@@ -69,12 +71,11 @@ const createNewNotification = async (req, res) => {
         return response(
             201, {notificationCreated: created}, 'Create Notification Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateNotification = async (req, res) => {
+const updateNotification = async (req, res, next) => {
     const id = Number(req.params.id)
     const { user_id, notification_title, notification_desc, is_read } = req.body
 
@@ -101,12 +102,11 @@ const updateNotification = async (req, res) => {
 
         return response( 200, {notificationUpdated: updated}, 'Update Notification Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteNotification = async (req, res) => {
+const deleteNotification = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -125,8 +125,7 @@ const deleteNotification = async (req, res) => {
 
         return response(200, {notificationId: id}, 'Delete Notification Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 

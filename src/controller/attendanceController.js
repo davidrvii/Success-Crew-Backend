@@ -1,7 +1,7 @@
 const prisma = require('../utils/prisma')
 const response = require('../../response')
 
-const getAllAttendance = async (req, res) => {
+const getAllAttendance = async (req, res, next) => {
     try {
         const attendances = await prisma.attendance.findMany({
             orderBy: { attendance_date: 'desc' },
@@ -44,12 +44,11 @@ const getAllAttendance = async (req, res) => {
 
         return response(200, {attendances: result}, 'Get All Attendance Success', res)
     } catch (error) {
-        response(500, {error: error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getCrewAttendance = async (req, res) => {
+const getCrewAttendance = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
@@ -90,12 +89,11 @@ const getCrewAttendance = async (req, res) => {
 
         return response(200, {crewAttendances: result}, 'Get Crew Attendance Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getAttendanceDetail = async (req, res) => {
+const getAttendanceDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -144,28 +142,30 @@ const getAttendanceDetail = async (req, res) => {
 
         return response(200, {attendanceDetail: result}, 'Get Attendance Detail Success', res)
     } catch (error) {
-        response(500, {error: error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createNewAttendance = async (req, res) => {
+const createNewAttendance = async (req, res, next) => {
     const {
-        user_id,
         attendance_status,
         attendance_in,
         attendance_date,
-        attendance_desc,
     } = req.body
 
     try {
-        if (!user_id || !attendance_status || !attendance_in || !attendance_date) {
+        const userId = Number(req.userData?.user_id);
+        if (!userId) {
+            return response(401, null, "Unauthorized", res);
+        }
+
+        if (!attendance_status || !attendance_in || !attendance_date) {
             return response(400, null, 'Missing Required Field', res)
         }
 
         const created = await prisma.attendance.create({
             data: {
-                user_id: Number(user_id),
+                user_id: userId,
                 attendance_status,
                 attendance_in,
                 attendance_date,
@@ -177,13 +177,11 @@ const createNewAttendance = async (req, res) => {
         if (error.code === "P2002") {
             return response(409, {}, "You've Already Check In Today", res);
         }
-        
-        response(500, {error: error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateAttendance = async (req, res) => {
+const updateAttendance = async (req, res, next) => {
     const id = Number(req.params.id)
     const { attendance_out } = req.body
 
@@ -209,12 +207,11 @@ const updateAttendance = async (req, res) => {
 
         return response(200, {attendanceOut: updated}, 'Update Attendance (Check-out) Success', res)
     } catch (error) {
-        response(500, {error: error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteAttendance = async (req, res) => {
+const deleteAttendance = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -233,8 +230,7 @@ const deleteAttendance = async (req, res) => {
 
         return response(200, {attendanceId: id}, 'Delete Attendance Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 

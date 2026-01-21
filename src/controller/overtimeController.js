@@ -1,7 +1,7 @@
 const prisma = require('../utils/prisma')
 const response = require('../../response')
 
-const getAllOvertime = async (req, res) => {
+const getAllOvertime = async (req, res, next) => {
     try {
         const overtimes = await prisma.overtimes.findMany({
             orderBy: { overtime_date: 'desc' },
@@ -9,12 +9,11 @@ const getAllOvertime = async (req, res) => {
 
         return response(200, {overtimes: overtimes}, 'Get All Overtime Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getCrewOvertime = async (req, res) => {
+const getCrewOvertime = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
@@ -25,12 +24,11 @@ const getCrewOvertime = async (req, res) => {
 
         return response( 200, {crewOvertimes: overtimes}, 'Get Crew Overtime Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getOvertimeDetail = async (req, res) => {
+const getOvertimeDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -44,14 +42,12 @@ const getOvertimeDetail = async (req, res) => {
 
         return response(200, {overtimeDetail: overtime}, 'Get Overtime Detail Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createNewOvertime = async (req, res) => {
+const createNewOvertime = async (req, res, next) => {
     const {
-        user_id,
         attendance_id,
         overtime_desc,
         overtime_date,
@@ -61,8 +57,12 @@ const createNewOvertime = async (req, res) => {
     } = req.body
 
     try {
+        const userId = Number(req.userData?.user_id);
+        if (!userId) {
+            return response(401, null, "Unauthorized", res);
+        }
+
         if (
-            !user_id ||
             !attendance_id ||
             !overtime_date ||
             !overtime_start ||
@@ -76,7 +76,7 @@ const createNewOvertime = async (req, res) => {
         }
 
         const data = {
-            user_id: Number(user_id),
+            user_id: userId,
             attendance_id: Number(attendance_id),
             overtime_desc: overtime_desc || null,
             overtime_date,
@@ -89,12 +89,11 @@ const createNewOvertime = async (req, res) => {
 
         return response(201, {newOvertime: created}, 'Create Overtime Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateOvertime = async (req, res) => {
+const updateOvertime = async (req, res, next) => {
     const id = Number(req.params.id)
     const { overtime_status } = req.body
 
@@ -120,12 +119,11 @@ const updateOvertime = async (req, res) => {
 
         return response(200, {updatedOvertime: updated}, 'Update Overtime Status Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteOvertime = async (req, res) => {
+const deleteOvertime = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -144,8 +142,7 @@ const deleteOvertime = async (req, res) => {
 
         return response(200, {overtimeId: id}, 'Delete Overtime Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 

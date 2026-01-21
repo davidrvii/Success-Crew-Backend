@@ -3,7 +3,7 @@ const { hashPassword, comparedPassword } = require('../utils/bcrypt')
 const { generateToken } = require('../utils/jwt')
 const response = require('../../response')
 
-const getAllUser = async (req, res) => {
+const getAllUser = async (req, res, next) => {
     try {
         const users = await prisma.users.findMany({
             select: {
@@ -40,12 +40,11 @@ const getAllUser = async (req, res) => {
 
         return response(200, {users: result}, 'Get All Users Success', res)
     } catch(error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getUserDetail = async (req, res) => {
+const getUserDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -92,12 +91,11 @@ const getUserDetail = async (req, res) => {
 
     return response(200, { userDetail: result }, 'Get User Detail Success', res)
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getUserBasic = async (req, res) => {
+const getUserBasic = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -133,7 +131,7 @@ const getUserBasic = async (req, res) => {
     }
 }
 
-const userRegister = async (req, res) => {
+const userRegister = async (req, res, next) => {
     const { office_id, role_id, user_name, user_email, user_password } = req.body;
 
     try {
@@ -167,12 +165,11 @@ const userRegister = async (req, res) => {
 
     return response(201, { userRegistered: newUser }, 'Register User Success', res);
     } catch (error) {
-        response(500, { error }, 'Server Error', res);
-        throw error;
+        return next(error)
     }
 }
 
-const userLogin = async (req, res) => {
+const userLogin = async (req, res, next) => {
     const { email, password } = req.body
 
     try {
@@ -228,12 +225,11 @@ const userLogin = async (req, res) => {
 
     return response(200, { loginResult: loginResult }, 'Login Success', res)
     } catch (error) {
-        response(500, { error }, 'Internal Server Error', res)
-        throw error;
+        return next(error)
     }
 }
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
     const id = Number(req.params.id)
     const { office_id, role_id, user_name, user_email, user_password } = req.body
     const file = req.file
@@ -301,12 +297,11 @@ const updateUser = async (req, res) => {
 
         return response(200, { user: result }, 'Update User Success', res)
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteUser = async (req, res) => {
+const deleteUser = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -325,8 +320,7 @@ const deleteUser = async (req, res) => {
 
         return response(200, { userId: id }, 'DELETE User Success', res)
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 

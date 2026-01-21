@@ -1,7 +1,7 @@
 const prisma = require('../utils/prisma')
 const response = require('../../response')
 
-const getAllLeave = async (req, res) => {
+const getAllLeave = async (req, res, next) => {
     try {
         const leaves = await prisma.leaves.findMany({
             orderBy: { leave_date: 'desc' },
@@ -9,12 +9,11 @@ const getAllLeave = async (req, res) => {
 
         return response(200, {leaves: leaves}, 'Get All Leave Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getCrewLeave = async (req, res) => {
+const getCrewLeave = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
@@ -25,12 +24,11 @@ const getCrewLeave = async (req, res) => {
 
         return response(200, {crewLeaves: leaves}, 'Get Crew Leave Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getLeaveDetail = async (req, res) => {
+const getLeaveDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -44,14 +42,12 @@ const getLeaveDetail = async (req, res) => {
 
         return response(200, {leaveDetail: leave}, 'Get Leave Detail Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createNewLeave = async (req, res) => {
+const createNewLeave = async (req, res, next) => {
     const {
-        user_id,
         attendance_id,
         leave_title,
         leave_desc,
@@ -60,12 +56,17 @@ const createNewLeave = async (req, res) => {
     } = req.body
 
     try {
-        if (!user_id || !leave_title || !leave_date) {
+        const userId = Number(req.userData?.user_id);
+        if (!userId) {
+            return response(401, null, "Unauthorized", res);
+        }
+
+        if (!leave_title || !leave_date) {
             return response(400, null, 'Missing Required Field', res)
         }
 
         const data = {
-            user_id: Number(user_id),
+            user_id: userId,
             leave_title,
             leave_desc: leave_desc || null,
             leave_date,
@@ -80,12 +81,11 @@ const createNewLeave = async (req, res) => {
 
         return response(201, {newLeave: created}, 'Create Leave Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateLeave = async (req, res) => {
+const updateLeave = async (req, res, next) => {
     const id = Number(req.params.id)
     const { leave_status } = req.body
 
@@ -111,12 +111,11 @@ const updateLeave = async (req, res) => {
 
         return response(200, {updatedLeave: updated}, 'Update Leave Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteLeave = async (req, res) => {
+const deleteLeave = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -135,8 +134,7 @@ const deleteLeave = async (req, res) => {
 
         return response(200, {leaveId: id}, 'Delete Leave Success', res)
     } catch (error) {
-        response(500, {error: error}, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 

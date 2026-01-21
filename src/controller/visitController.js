@@ -5,7 +5,7 @@ const response = require('../../response')
  * VISIT
  * ============================ */
 
-const getAllVisit = async (req, res) => {
+const getAllVisit = async (req, res, next) => {
     try {
         const visits = await prisma.visit.findMany({
             orderBy: { created_at: 'desc' },
@@ -23,12 +23,11 @@ const getAllVisit = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const getVisitDetail = async (req, res) => {
+const getVisitDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -52,23 +51,26 @@ const getVisitDetail = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createNewVisit = async (req, res) => {
-    const { visitor_id, user_id, visitor_interest, visitor_status } = req.body
+const createNewVisit = async (req, res, next) => {
+    const { visitor_interest, visitor_status } = req.body
 
     try {
-        if (!visitor_id || !user_id || !visitor_interest || !visitor_status) {
+        const userId = Number(req.userData?.user_id);
+        if (!userId) {
+            return response(401, null, "Unauthorized", res);
+        }
+
+        if (!visitor_interest || !visitor_status) {
             return response(400, null, 'Missing Required Field', res)
         }
 
         const created = await prisma.visit.create({
             data: {
-                visitor_id: Number(visitor_id),
-                user_id: Number(user_id),
+                user_id: userId,
                 visitor_interest,
                 visitor_status,
             },
@@ -81,12 +83,11 @@ const createNewVisit = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateVisit = async (req, res) => {
+const updateVisit = async (req, res, next) => {
     const id = Number(req.params.id)
     const { visitor_id, user_id, visitor_interest, visitor_status } = req.body
 
@@ -117,12 +118,11 @@ const updateVisit = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteVisit = async (req, res) => {
+const deleteVisit = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
@@ -149,15 +149,14 @@ const deleteVisit = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
 /* ============================
- * FOLLOW UP (banyak per visit)
+ * FOLLOW UP
  * ============================ */
-const getVisitFollowUp = async (req, res) => {
+const getVisitFollowUp = async (req, res, next) => {
     const visitId = Number(req.params.id)
 
     try {
@@ -173,12 +172,11 @@ const getVisitFollowUp = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createVisitFollowUp = async (req, res) => {
+const createVisitFollowUp = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const { follow_up_status, follow_up_action } = req.body
 
@@ -211,12 +209,11 @@ const createVisitFollowUp = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateVisitFollowUp = async (req, res) => {
+const updateVisitFollowUp = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const followUpId = Number(req.params.followUpId)
     const { follow_up_status, follow_up_action } = req.body
@@ -246,30 +243,30 @@ const updateVisitFollowUp = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteVisitFollowUp = async (req, res) => {
+const deleteVisitFollowUp = async (req, res, next) => {
     const { followUpId } = req.params;
 
-    await prisma.follow_up.delete({
+    try {
+        await prisma.follow_up.delete({
         where: { follow_up_id: Number(followUpId) },
     });
 
     return response(200, {}, "Follow up deleted", res);
-};
 
-module.exports = {
-    deleteVisitFollowUp,
+    } catch (error) {
+        return next(error)
+    }
 };
 
 
 /* ============================
  * PRODUCT SOLD
  * ============================ */
-const getVisitProductsSold = async (req, res) => {
+const getVisitProductsSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
 
     try {
@@ -285,12 +282,11 @@ const getVisitProductsSold = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createVisitProductSold = async (req, res) => {
+const createVisitProductSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const { product_sold_type, product_sold_category } = req.body
 
@@ -323,12 +319,11 @@ const createVisitProductSold = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateVisitProductSold = async (req, res) => {
+const updateVisitProductSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const productSoldId = Number(req.params.productSoldId)
     const { product_sold_type, product_sold_category } = req.body
@@ -358,12 +353,11 @@ const updateVisitProductSold = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteVisitProductSold = async (req, res) => {
+const deleteVisitProductSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const productSoldId = Number(req.params.productSoldId)
 
@@ -388,16 +382,15 @@ const deleteVisitProductSold = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
 /* ============================
- * UNIT SERVICED (0..n per visit)
+ * UNIT SERVICED
  * ============================ */
 
-const getVisitUnitsServiced = async (req, res) => {
+const getVisitUnitsServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
 
     try {
@@ -413,12 +406,11 @@ const getVisitUnitsServiced = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const createVisitUnitServiced = async (req, res) => {
+const createVisitUnitServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const { unit_serviced_type, unit_serviced_category } = req.body
 
@@ -451,12 +443,11 @@ const createVisitUnitServiced = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const updateVisitUnitServiced = async (req, res) => {
+const updateVisitUnitServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const unitServicedId = Number(req.params.unitServicedId)
     const { unit_serviced_type, unit_serviced_category } = req.body
@@ -486,12 +477,11 @@ const updateVisitUnitServiced = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
-const deleteVisitUnitServiced = async (req, res) => {
+const deleteVisitUnitServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const unitServicedId = Number(req.params.unitServicedId)
 
@@ -516,8 +506,7 @@ const deleteVisitUnitServiced = async (req, res) => {
             res
         )
     } catch (error) {
-        response(500, { error }, 'Server Error', res)
-        throw error
+        return next(error)
     }
 }
 
