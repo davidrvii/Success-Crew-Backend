@@ -56,7 +56,7 @@ const getVisitDetail = async (req, res, next) => {
 }
 
 const createNewVisit = async (req, res, next) => {
-    const { visitor_interest, visitor_status } = req.body
+    const { visitor_interest, visitor_status, visit_type, visit_desc } = req.body;
 
     try {
         const userId = Number(req.userData?.user_id);
@@ -64,63 +64,66 @@ const createNewVisit = async (req, res, next) => {
             return response(401, null, "Unauthorized", res);
         }
 
-        if (!visitor_interest || !visitor_status) {
-            return response(400, null, 'Missing Required Field', res)
+        if (!visitor_interest || !visitor_status || !visit_type) {
+            return response(400, null, "Missing Required Field", res);
         }
 
         const created = await prisma.visit.create({
-            data: {
-                user_id: userId,
-                visitor_interest,
-                visitor_status,
-            },
-        })
+        data: {
+            user_id: userId,
+            visitor_interest,
+            visitor_status,
+            visit_type,
+            visit_desc: visit_desc ?? null,
+        },
+    });
 
-        return response(
-            201,
-            { visit: created },
-            'Create Visit Success',
-            res
-        )
+        return response(201, { visit: created }, "Create Visit Success", res);
     } catch (error) {
-        return next(error)
+        return next(error);
     }
 }
 
 const updateVisit = async (req, res, next) => {
-    const id = Number(req.params.id)
-    const { visitor_id, user_id, visitor_interest, visitor_status } = req.body
+    const id = Number(req.params.id);
+    const {
+        visitor_id,
+        user_id,
+        visitor_interest,
+        visitor_status,
+        visit_type,
+        visit_desc,
+    } = req.body;
 
     try {
         const existing = await prisma.visit.findUnique({
-            where: { visit_id: id },
-        })
+        where: { visit_id: id },
+        });
 
         if (!existing) {
-            return response(404, null, 'Visit Not Found', res)
+        return response(404, null, "Visit Not Found", res);
         }
 
-        const data = {}
-        if (visitor_id) data.visitor_id = Number(visitor_id)
-        if (user_id) data.user_id = Number(user_id)
-        if (visitor_interest) data.visitor_interest = visitor_interest
-        if (visitor_status) data.visitor_status = visitor_status
+        const data = {};
+
+        if (visitor_id !== undefined) data.visitor_id = Number(visitor_id);
+        if (user_id !== undefined) data.user_id = Number(user_id);
+        if (visitor_interest !== undefined) data.visitor_interest = visitor_interest;
+        if (visitor_status !== undefined) data.visitor_status = visitor_status;
+        if (visit_type !== undefined) data.visit_type = visit_type;
+        if (visit_desc !== undefined) data.visit_desc = visit_desc;
 
         const updated = await prisma.visit.update({
-            where: { visit_id: id },
-            data,
-        })
+        where: { visit_id: id },
+        data,
+        });
 
-        return response(
-            200,
-            { visit: updated },
-            'Update Visit Success',
-            res
-        )
+        return response(200, { visit: updated }, "Update Visit Success", res);
     } catch (error) {
-        return next(error)
+        return next(error);
     }
-}
+};
+
 
 const deleteVisit = async (req, res, next) => {
     const id = Number(req.params.id)
