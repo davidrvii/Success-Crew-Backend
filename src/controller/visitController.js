@@ -56,7 +56,7 @@ const getVisitDetail = async (req, res, next) => {
 }
 
 const createNewVisit = async (req, res, next) => {
-    const { visitor_interest, visitor_status, visit_type, visit_desc } = req.body;
+    const { visitor_id, visitor_interest, visitor_status, visit_type, visit_desc } = req.body;
 
     try {
         const userId = Number(req.userData?.user_id);
@@ -64,13 +64,14 @@ const createNewVisit = async (req, res, next) => {
             return response(401, null, "Unauthorized", res);
         }
 
-        if (!visitor_interest || !visitor_status || !visit_type) {
+        if (!visitor_id || !visitor_interest || !visitor_status || !visit_type) {
             return response(400, null, "Missing Required Field", res);
         }
 
         const created = await prisma.visit.create({
         data: {
             user_id: userId,
+            visitor_id: Number(visitor_id),
             visitor_interest,
             visitor_status,
             visit_type,

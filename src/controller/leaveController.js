@@ -48,7 +48,6 @@ const getLeaveDetail = async (req, res, next) => {
 
 const createNewLeave = async (req, res, next) => {
     const {
-        attendance_id,
         leave_title,
         leave_desc,
         leave_date,
@@ -71,10 +70,6 @@ const createNewLeave = async (req, res, next) => {
             leave_desc: leave_desc || null,
             leave_date,
             leave_status: leave_status || 'PENDING',
-        }
-
-        if (attendance_id) {
-            data.attendance_id = Number(attendance_id)
         }
 
         const created = await prisma.leaves.create({ data })

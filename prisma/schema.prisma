@@ -14,9 +14,9 @@ model attendance {
   attendance_status String
   attendance_in     DateTime?
   attendance_out    DateTime?
+  attendance_desc   String?
   attendance_date   DateTime
 
-  leaves            leaves[]
   overtimes         overtimes[]
 
   created_at        DateTime   @default(now())
@@ -52,17 +52,15 @@ model follow_up {
 model leaves {
   leave_id       Int      @id @default(autoincrement())
   user_id        Int
-  attendance_id  Int
   leave_title    String
   leave_desc     String
   leave_date     DateTime
   leave_status   String
 
-  created_at     DateTime
-  updated_at     DateTime
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now())
 
   users          users      @relation(fields: [user_id], references: [user_id])
-  attendance     attendance @relation(fields: [attendance_id], references: [attendance_id])
 }
 
 model notifications {
@@ -137,7 +135,7 @@ model users {
   user_name     String          @db.VarChar
   user_email    String          @unique(map: "user_email") @db.VarChar
   user_password String          @db.VarChar
-  user_photo    Bytes?
+  user_photo    String?         @db.VarChar
   created_at    DateTime        @default(now()) @db.Timestamptz(6)
   updated_at    DateTime        @default(now()) @db.Timestamptz(6)
   attendance    attendance[]
@@ -155,6 +153,8 @@ model visit {
   user_id          Int
   visitor_interest String
   visitor_status   String          @db.VarChar
+  visit_type       String?         @db.VarChar
+  visit_desc       String?         @db.VarChar
   created_at       DateTime        @default(now()) @db.Timestamptz(6)
   updated_at       DateTime        @default(now()) @db.Timestamptz(6)
   follow_up        follow_up[]

@@ -198,7 +198,7 @@ const userLogin = async (req, res, next) => {
             return response(401, { loginResult: null }, 'Invalid Email or Password', res)
         }
 
-    const isPasswordMatch = comparedPassword(password, user.user_password)
+    const isPasswordMatch = await comparedPassword(password, user.user_password)
     if (!isPasswordMatch) {
         return response(401, { loginResult: null }, 'Invalid Email or Password', res)
     }
@@ -254,8 +254,8 @@ const updateUser = async (req, res, next) => {
             data.user_password = hashed
         }
 
-        if (file && file.buffer) {
-            data.user_photo = file.buffer
+        if (file) {
+            data.user_photo = `/uploads/images/${file.filename}`
         }
 
         const updated = await prisma.users.update({
