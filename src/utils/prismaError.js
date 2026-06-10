@@ -1,4 +1,4 @@
-const { Prisma } = require("@prisma/client");
+const { Prisma } = require("../../generated/prisma");
 
 function mapPrismaError(err) {
   // Prisma known request errors
