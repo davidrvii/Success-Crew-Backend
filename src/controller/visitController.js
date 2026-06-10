@@ -33,6 +33,9 @@ const getAllVisit = async (req, res, next) => {
             visit_desc: visit.visit_desc,
             created_at: visit.created_at,
             visitor_name: visit.visitor?.visitor_name || null,
+            visitor_phone: visit.visitor?.visitor_phone || null,
+            visitor_address: visit.visitor?.visitor_address || null,
+            visitor_information: visit.visitor?.visitor_information || null,
         }));
 
         return response(
