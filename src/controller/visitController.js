@@ -10,15 +10,34 @@ const getAllVisit = async (req, res, next) => {
         const visits = await prisma.visit.findMany({
             orderBy: { created_at: 'desc' },
             include: {
+                visitor: true,
+                users: {
+                    select: {
+                        user_id: true,
+                        user_name: true,
+                        user_email: true,
+                        user_photo: true,
+                    }
+                },
                 follow_up: true,
                 product_sold: true,
                 unit_serviced: true,
             },
         })
 
+        const formattedVisits = visits.map(visit => ({
+            visit_id: visit.visit_id,
+            visitor_interest: visit.visitor_interest,
+            visitor_status: visit.visitor_status,
+            visit_type: visit.visit_type,
+            visit_desc: visit.visit_desc,
+            created_at: visit.created_at,
+            visitor_name: visit.visitor?.visitor_name || null,
+        }));
+
         return response(
             200,
-            { visits },
+            { visits: formattedVisits },
             'Get All Visit Success',
             res
         )
@@ -34,6 +53,13 @@ const getVisitDetail = async (req, res, next) => {
         const visit = await prisma.visit.findUnique({
             where: { visit_id: id },
             include: {
+                visitor: true,
+                users: {
+                    select: {
+                        user_id: true,
+                        user_name: true,
+                    }
+                },
                 follow_up: true,
                 product_sold: true,
                 unit_serviced: true,
@@ -44,9 +70,26 @@ const getVisitDetail = async (req, res, next) => {
             return response(404, null, 'Visit Not Found', res)
         }
 
+        const formattedVisit = {
+            visit_id: visit.visit_id,
+            visitor_interest: visit.visitor_interest,
+            visitor_status: visit.visitor_status,
+            visit_type: visit.visit_type,
+            visit_desc: visit.visit_desc,
+            created_at: visit.created_at,
+            visitor_name: visit.visitor?.visitor_name || null,
+            visitor_phone: visit.visitor?.visitor_phone || null,
+            visitor_address: visit.visitor?.visitor_address || null,
+            visitor_information: visit.visitor?.visitor_information || null,
+            sales_name: visit.users?.user_name || null,
+            follow_up: visit.follow_up,
+            product_sold: visit.product_sold,
+            unit_serviced: visit.unit_serviced,
+        };
+
         return response(
             200,
-            { visit },
+            { visit: formattedVisit },
             'Get Visit Detail Success',
             res
         )
@@ -56,16 +99,16 @@ const getVisitDetail = async (req, res, next) => {
 }
 
 const createNewVisit = async (req, res, next) => {
-    const { 
-        visitor_id, 
-        visitor_name, 
-        visitor_phone, 
-        visitor_address, 
-        visitor_information, 
-        visitor_interest, 
-        visitor_status, 
-        visit_type, 
-        visit_desc 
+    const {
+        visitor_id,
+        visitor_name,
+        visitor_phone,
+        visitor_address,
+        visitor_information,
+        visitor_interest,
+        visitor_status,
+        visit_type,
+        visit_desc
     } = req.body;
 
     try {

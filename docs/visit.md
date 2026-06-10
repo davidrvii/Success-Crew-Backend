@@ -21,17 +21,12 @@ Authorization: Bearer <token>
   "visits": [
     {
       "visit_id": 1,
-      "visitor_id": 5,
-      "user_id": 10,
       "visitor_interest": "Laptop gaming",
       "visitor_status": "NEW",
       "visit_type": "WALK_IN",
       "visit_desc": "Ingin lihat stok dan promo",
       "created_at": "2026-01-21T03:30:27.000Z",
-      "updated_at": "2026-01-21T03:30:27.000Z",
-      "follow_up": [],
-      "product_sold": [],
-      "unit_serviced": []
+      "visitor_name": "John Doe"
     }
   ]
 }
@@ -53,14 +48,16 @@ Authorization: Bearer <token>
   "message": "Get Visit Detail Success",
   "visit": {
     "visit_id": 1,
-    "visitor_id": 5,
-    "user_id": 10,
     "visitor_interest": "Laptop gaming",
-    "visitor_status": "NEW",
+    "visitor_status": "Follow Up",
     "visit_type": "WALK_IN",
     "visit_desc": "Ingin lihat stok dan promo",
     "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T03:30:27.000Z",
+    "visitor_name": "John Doe",
+    "visitor_phone": "08123456789",
+    "visitor_address": "Perusahaan A",
+    "visitor_information": "Baru",
+    "sales_name": "Sales A", 
     "follow_up": [],
     "product_sold": [],
     "unit_serviced": []
