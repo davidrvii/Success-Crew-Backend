@@ -6,6 +6,7 @@ const attendanceRoutes = require('./attendanceRoutes')
 const leaveRoutes = require('./leaveRoutes')
 const overtimeRoutes = require('./overtimeRoutes')
 const visitRoutes = require('./visitRoutes')
+const visitorRoutes = require('./visitorRoutes')
 
 router.get('/', (req, res) => {
     res.send("Welcome to Success Crew <br><br> -Success Comp-")
@@ -17,5 +18,6 @@ router.use('/attendance',attendanceRoutes)
 router.use('/leave', leaveRoutes)
 router.use('/overtime', overtimeRoutes)
 router.use('/visit', visitRoutes)
+router.use('/visitor', visitorRoutes)
 
 module.exports = router;

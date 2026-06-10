@@ -56,7 +56,17 @@ const getVisitDetail = async (req, res, next) => {
 }
 
 const createNewVisit = async (req, res, next) => {
-    const { visitor_id, visitor_interest, visitor_status, visit_type, visit_desc } = req.body;
+    const { 
+        visitor_id, 
+        visitor_name, 
+        visitor_phone, 
+        visitor_address, 
+        visitor_information, 
+        visitor_interest, 
+        visitor_status, 
+        visit_type, 
+        visit_desc 
+    } = req.body;
 
     try {
         const userId = Number(req.userData?.user_id);
@@ -64,14 +74,33 @@ const createNewVisit = async (req, res, next) => {
             return response(401, null, "Unauthorized", res);
         }
 
-        if (!visitor_id || !visitor_interest || !visitor_status || !visit_type) {
-            return response(400, null, "Missing Required Field", res);
+        if (!visitor_interest || !visitor_status || !visit_type) {
+            return response(400, null, "Missing Required Field (visitor_interest, visitor_status, visit_type)", res);
+        }
+
+        let targetVisitorId = visitor_id ? Number(visitor_id) : null;
+
+        if (!targetVisitorId) {
+            // New visitor: require visitor_name to create visitor first
+            if (!visitor_name) {
+                return response(400, null, "visitor_id or visitor_name is required", res);
+            }
+
+            const newVisitor = await prisma.visitor.create({
+                data: {
+                    visitor_name,
+                    visitor_phone: visitor_phone ?? null,
+                    visitor_address: visitor_address ?? null,
+                    visitor_information: visitor_information ?? null,
+                }
+            });
+            targetVisitorId = newVisitor.visitor_id;
         }
 
         const created = await prisma.visit.create({
             data: {
                 user_id: userId,
-                visitor_id: Number(visitor_id),
+                visitor_id: targetVisitorId,
                 visitor_interest,
                 visitor_status,
                 visit_type,
