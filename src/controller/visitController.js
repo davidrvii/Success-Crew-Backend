@@ -69,15 +69,15 @@ const createNewVisit = async (req, res, next) => {
         }
 
         const created = await prisma.visit.create({
-        data: {
-            user_id: userId,
-            visitor_id: Number(visitor_id),
-            visitor_interest,
-            visitor_status,
-            visit_type,
-            visit_desc: visit_desc ?? null,
-        },
-    });
+            data: {
+                user_id: userId,
+                visitor_id: Number(visitor_id),
+                visitor_interest,
+                visitor_status,
+                visit_type,
+                visit_desc: visit_desc ?? null,
+            },
+        });
 
         return response(201, { visit: created }, "Create Visit Success", res);
     } catch (error) {
@@ -98,11 +98,11 @@ const updateVisit = async (req, res, next) => {
 
     try {
         const existing = await prisma.visit.findUnique({
-        where: { visit_id: id },
+            where: { visit_id: id },
         });
 
         if (!existing) {
-        return response(404, null, "Visit Not Found", res);
+            return response(404, null, "Visit Not Found", res);
         }
 
         const data = {};
@@ -115,8 +115,8 @@ const updateVisit = async (req, res, next) => {
         if (visit_desc !== undefined) data.visit_desc = visit_desc;
 
         const updated = await prisma.visit.update({
-        where: { visit_id: id },
-        data,
+            where: { visit_id: id },
+            data,
         });
 
         return response(200, { visit: updated }, "Update Visit Success", res);
@@ -256,10 +256,10 @@ const deleteVisitFollowUp = async (req, res, next) => {
 
     try {
         await prisma.follow_up.delete({
-        where: { follow_up_id: Number(followUpId) },
-    });
+            where: { follow_up_id: Number(followUpId) },
+        });
 
-    return response(200, {}, "Follow up deleted", res);
+        return response(200, {}, "Follow up deleted", res);
 
     } catch (error) {
         return next(error)
