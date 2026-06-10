@@ -180,7 +180,7 @@ Authorization: Bearer <token>
   - `user_name` (string)
   - `user_email` (string)
   - `user_password` (string) → will be hashed
-  - `user_image` (file) → stored in user_photo column (bytea)
+  - `user_image` (file) → uploaded to server, path stored in user_photo column (VARCHAR)
 - Response Success :
 ```json
 {
