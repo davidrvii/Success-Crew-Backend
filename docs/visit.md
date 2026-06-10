@@ -26,6 +26,7 @@ Authorization: Bearer <token>
       "visitor_interest": "Laptop gaming",
       "visitor_status": "NEW",
       "visit_type": "WALK_IN",
+      "visit_desc": "Ingin lihat stok dan promo",
       "created_at": "2026-01-21T03:30:27.000Z",
       "updated_at": "2026-01-21T03:30:27.000Z",
       "follow_up": [],
@@ -57,6 +58,7 @@ Authorization: Bearer <token>
     "visitor_interest": "Laptop gaming",
     "visitor_status": "NEW",
     "visit_type": "WALK_IN",
+    "visit_desc": "Ingin lihat stok dan promo",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T03:30:27.000Z",
     "follow_up": [],
@@ -99,6 +101,7 @@ Authorization: Bearer <token>
     "visitor_interest": "Laptop gaming",
     "visitor_status": "NEW",
     "visit_type": "WALK_IN",
+    "visit_desc": "Mau tanya promo dan cicilan",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T03:30:27.000Z"
   }
@@ -139,6 +142,7 @@ Authorization: Bearer <token>
     "visitor_interest": "Laptop untuk kerja",
     "visitor_status": "FOLLOW_UP",
     "visit_type": "APPOINTMENT",
+    "visit_desc": "Mau tanya promo dan cicilan",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T04:30:27.000Z"
   }
