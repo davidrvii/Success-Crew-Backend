@@ -9,58 +9,27 @@ datasource db {
 }
 
 model attendance {
-  attendance_id     Int        @id @default(autoincrement())
+  attendance_id     Int       @id @default(autoincrement())
   user_id           Int
   attendance_status String
   attendance_in     DateTime?
   attendance_out    DateTime?
-  attendance_desc   String?
   attendance_date   DateTime
-
-  overtimes         overtimes[]
-
-  created_at        DateTime   @default(now())
-  updated_at        DateTime   @default(now())
-
-  users             users      @relation(fields: [user_id], references: [user_id])
-}
-
-model attendance_status {
-  attendance_status_id   Int      @id(map: "employee_attendance_pk") @default(autoincrement())
-  attendance_status_name String   @db.VarChar
-  create_at              DateTime @default(now()) @db.Timestamp(6)
-  update_at              DateTime @default(now()) @db.Timestamp(6)
-}
-
-model employee_status {
-  employee_status_id   Int      @id(map: "employee_status_pk") @default(autoincrement())
-  employee_status_name String   @db.VarChar
-  create_at            DateTime @default(now()) @db.Timestamp(6)
-  update_at            DateTime @default(now()) @db.Timestamp(6)
-}
-
-model follow_up {
-  follow_up_id     Int      @id(map: "follow_up_pk") @default(autoincrement())
-  visit_id         Int
-  follow_up_status String   @db.VarChar
-  follow_up_action String   @db.VarChar
-  created_at       DateTime @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime @default(now()) @db.Timestamptz(6)
-  visit            visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_follow_up_fk")
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @default(now())
+  attendance_desc   String?
 }
 
 model leaves {
-  leave_id       Int      @id @default(autoincrement())
-  user_id        Int
-  leave_title    String
-  leave_desc     String
-  leave_date     DateTime
-  leave_status   String
-
-  created_at     DateTime @default(now())
-  updated_at     DateTime @default(now())
-
-  users          users      @relation(fields: [user_id], references: [user_id])
+  leave_id      Int      @id(map: "leave_pk") @default(autoincrement())
+  user_id       Int
+  attendance_id Int
+  leave_title   String   @db.VarChar
+  leave_desc    String   @db.VarChar
+  leave_date    DateTime @db.Date
+  leave_status  String   @db.VarChar
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
 }
 
 model notifications {
@@ -84,32 +53,16 @@ model offices {
 }
 
 model overtimes {
-  overtime_id     Int      @id @default(autoincrement())
+  overtime_id     Int       @id(map: "overtime_pk") @default(autoincrement())
   user_id         Int
   attendance_id   Int
   overtime_desc   String
-  overtime_date   DateTime?
-  overtime_start  DateTime
-  overtime_end    DateTime
-  overtime_status String
-
-  created_at      DateTime   @default(now())
-  updated_at      DateTime   @default(now())
-
-  users           users      @relation(fields: [user_id], references: [user_id])
-  attendance      attendance @relation(fields: [attendance_id], references: [attendance_id])
-}
-
-model product_sold {
-  product_sold_id       Int      @id(map: "product_sold_pk") @default(autoincrement())
-  visit_id              Int
-  product_sold_name     String   @db.VarChar
-  product_sold_quantity Int?
-  product_sold_price    Float?
-  product_sold_desc     String?  @db.VarChar
-  created_at            DateTime @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime @default(now()) @db.Timestamptz(6)
-  visit                 visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_product_sold_fk")
+  overtime_date   DateTime? @db.Date
+  overtime_start  DateTime  @db.Timetz(6)
+  overtime_end    DateTime  @db.Timetz(6)
+  overtime_status String    @db.VarChar
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
 }
 
 model roles {
@@ -120,19 +73,6 @@ model roles {
   users      users[]
 }
 
-model unit_serviced {
-  unit_serviced_id       Int      @id(map: "unit_serviced_pk") @default(autoincrement())
-  visit_id               Int
-  unit_serviced_name     String   @db.VarChar
-  unit_serviced_issue    String?  @db.VarChar
-  unit_serviced_action   String?  @db.VarChar
-  unit_serviced_status   String?  @db.VarChar
-  unit_serviced_desc     String?  @db.VarChar
-  created_at             DateTime @default(now()) @db.Timestamptz(6)
-  updated_at             DateTime @default(now()) @db.Timestamptz(6)
-  visit                  visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_unit_serviced_fk")
-}
-
 model users {
   user_id       Int             @id(map: "users_pk") @default(autoincrement())
   office_id     Int
@@ -140,16 +80,24 @@ model users {
   user_name     String          @db.VarChar
   user_email    String          @unique(map: "user_email") @db.VarChar
   user_password String          @db.VarChar
-  user_photo    String?         @db.VarChar
+  user_photo    Bytes?
   created_at    DateTime        @default(now()) @db.Timestamptz(6)
   updated_at    DateTime        @default(now()) @db.Timestamptz(6)
-  attendance    attendance[]
-  leaves        leaves[]
   notifications notifications[]
-  overtimes     overtimes[]
   offices       offices         @relation(fields: [office_id], references: [office_id], onDelete: NoAction, onUpdate: NoAction, map: "office_user_fk")
   roles         roles           @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction, map: "role_user_fk")
   visit         visit[]
+}
+
+model visitor {
+  visitor_id          Int      @id(map: "visitor_pk") @default(autoincrement())
+  visitor_name        String?  @db.VarChar
+  visitor_phone       String?  @db.VarChar
+  visitor_information String?  @db.VarChar
+  visitor_company     String?  @db.VarChar
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @default(now()) @db.Timestamptz(6)
+  visit               visit[]
 }
 
 model visit {
@@ -169,13 +117,37 @@ model visit {
   visitor          visitor         @relation(fields: [visitor_id], references: [visitor_id], onDelete: NoAction, onUpdate: NoAction, map: "visitor_visit_fk")
 }
 
-model visitor {
-  visitor_id          Int      @id(map: "visitor_pk") @default(autoincrement())
-  visitor_name        String?  @db.VarChar
-  visitor_phone       String?  @db.VarChar
-  visitor_information String?  @db.VarChar
-  visitor_company     String?  @db.VarChar
-  created_at          DateTime @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime @default(now()) @db.Timestamptz(6)
-  visit               visit[]
+model follow_up {
+  follow_up_id     Int      @id(map: "follow_up_pk") @default(autoincrement())
+  visit_id         Int
+  follow_up_status String   @db.VarChar
+  follow_up_action String   @db.VarChar
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+  visit            visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_follow_up_fk")
+}
+
+model product_sold {
+  product_sold_id       Int      @id(map: "product_sold_pk") @default(autoincrement())
+  visit_id              Int
+  product_sold_name     String   @db.VarChar
+  product_sold_quantity Int?
+  product_sold_price    Float?
+  product_sold_desc     String?  @db.VarChar
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime @default(now()) @db.Timestamptz(6)
+  visit                 visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_product_sold_fk")
+}
+
+model unit_serviced {
+  unit_serviced_id       Int      @id(map: "unit_serviced_pk") @default(autoincrement())
+  visit_id               Int
+  unit_serviced_name     String   @db.VarChar
+  unit_serviced_issue    String?  @db.VarChar
+  unit_serviced_action   String?  @db.VarChar
+  unit_serviced_status   String?  @db.VarChar
+  unit_serviced_desc     String?  @db.VarChar
+  created_at             DateTime @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime @default(now()) @db.Timestamptz(6)
+  visit                  visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_unit_serviced_fk")
 }
