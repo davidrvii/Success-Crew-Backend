@@ -25,18 +25,26 @@ const getAllVisit = async (req, res, next) => {
             },
         })
 
-        const formattedVisits = visits.map(visit => ({
-            visit_id: visit.visit_id,
-            visitor_interest: visit.visitor_interest,
-            visitor_status: visit.visitor_status,
-            visit_type: visit.visit_type,
-            visit_desc: visit.visit_desc,
-            created_at: visit.created_at,
-            visitor_name: visit.visitor?.visitor_name || null,
-            visitor_phone: visit.visitor?.visitor_phone || null,
-            visitor_company: visit.visitor?.visitor_company || null,
-            visitor_information: visit.visitor?.visitor_information || null,
-        }));
+        const formattedVisits = visits.map(visit => {
+            let lastStatus = visit.visitor_status;
+            if (visit.follow_up && visit.follow_up.length > 0) {
+                const sortedFollowUp = [...visit.follow_up].sort((a, b) => a.follow_up_id - b.follow_up_id);
+                const lastFollowUp = sortedFollowUp[sortedFollowUp.length - 1];
+                lastStatus = lastFollowUp.follow_up_status;
+            }
+            return {
+                visit_id: visit.visit_id,
+                visitor_interest: visit.visitor_interest,
+                visitor_status: lastStatus,
+                visit_type: visit.visit_type,
+                visit_desc: visit.visit_desc,
+                created_at: visit.created_at,
+                visitor_name: visit.visitor?.visitor_name || null,
+                visitor_phone: visit.visitor?.visitor_phone || null,
+                visitor_company: visit.visitor?.visitor_company || null,
+                visitor_information: visit.visitor?.visitor_information || null,
+            };
+        });
 
         return response(
             200,
@@ -73,10 +81,17 @@ const getVisitDetail = async (req, res, next) => {
             return response(404, null, 'Visit Not Found', res)
         }
 
+        let lastStatus = visit.visitor_status;
+        if (visit.follow_up && visit.follow_up.length > 0) {
+            const sortedFollowUp = [...visit.follow_up].sort((a, b) => a.follow_up_id - b.follow_up_id);
+            const lastFollowUp = sortedFollowUp[sortedFollowUp.length - 1];
+            lastStatus = lastFollowUp.follow_up_status;
+        }
+
         const formattedVisit = {
             visit_id: visit.visit_id,
             visitor_interest: visit.visitor_interest,
-            visitor_status: visit.visitor_status,
+            visitor_status: lastStatus,
             visit_type: visit.visit_type,
             visit_desc: visit.visit_desc,
             created_at: visit.created_at,
@@ -281,6 +296,11 @@ const createVisitFollowUp = async (req, res, next) => {
             },
         })
 
+        await prisma.visit.update({
+            where: { visit_id: visitId },
+            data: { visitor_status: follow_up_status },
+        })
+
         return response(
             201,
             { followUp: created },
@@ -315,6 +335,19 @@ const updateVisitFollowUp = async (req, res, next) => {
             data,
         })
 
+        if (follow_up_status) {
+            const lastFollowUp = await prisma.follow_up.findFirst({
+                where: { visit_id: visitId },
+                orderBy: { follow_up_id: 'desc' },
+            })
+            if (lastFollowUp && lastFollowUp.follow_up_id === followUpId) {
+                await prisma.visit.update({
+                    where: { visit_id: visitId },
+                    data: { visitor_status: follow_up_status },
+                })
+            }
+        }
+
         return response(
             200,
             { followUp: updated },
@@ -330,9 +363,21 @@ const deleteVisitFollowUp = async (req, res, next) => {
     const { followUpId } = req.params;
 
     try {
-        await prisma.follow_up.delete({
+        const deleted = await prisma.follow_up.delete({
             where: { follow_up_id: Number(followUpId) },
         });
+
+        const lastFollowUp = await prisma.follow_up.findFirst({
+            where: { visit_id: deleted.visit_id },
+            orderBy: { follow_up_id: 'desc' },
+        });
+
+        if (lastFollowUp) {
+            await prisma.visit.update({
+                where: { visit_id: deleted.visit_id },
+                data: { visitor_status: lastFollowUp.follow_up_status },
+            });
+        }
 
         return response(200, {}, "Follow up deleted", res);
 
