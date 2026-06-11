@@ -35,7 +35,7 @@ const getVisitorDetail = async (req, res, next) => {
 }
 
 const createNewVisitor = async (req, res, next) => {
-    const { visitor_name, visitor_phone, visitor_address, visitor_information } = req.body;
+    const { visitor_name, visitor_phone, visitor_company, visitor_information } = req.body;
 
     try {
         if (!visitor_name) {
@@ -46,7 +46,7 @@ const createNewVisitor = async (req, res, next) => {
             data: {
                 visitor_name,
                 visitor_phone: visitor_phone ?? null,
-                visitor_address: visitor_address ?? null,
+                visitor_company: visitor_company ?? null,
                 visitor_information: visitor_information ?? null,
             }
         })

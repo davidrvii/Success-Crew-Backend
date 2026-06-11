@@ -34,7 +34,7 @@ const getAllVisit = async (req, res, next) => {
             created_at: visit.created_at,
             visitor_name: visit.visitor?.visitor_name || null,
             visitor_phone: visit.visitor?.visitor_phone || null,
-            visitor_address: visit.visitor?.visitor_address || null,
+            visitor_company: visit.visitor?.visitor_company || null,
             visitor_information: visit.visitor?.visitor_information || null,
         }));
 
@@ -82,7 +82,7 @@ const getVisitDetail = async (req, res, next) => {
             created_at: visit.created_at,
             visitor_name: visit.visitor?.visitor_name || null,
             visitor_phone: visit.visitor?.visitor_phone || null,
-            visitor_address: visit.visitor?.visitor_address || null,
+            visitor_company: visit.visitor?.visitor_company || null,
             visitor_information: visit.visitor?.visitor_information || null,
             sales_name: visit.users?.user_name || null,
             follow_up: visit.follow_up,
@@ -106,7 +106,7 @@ const createNewVisit = async (req, res, next) => {
         visitor_id,
         visitor_name,
         visitor_phone,
-        visitor_address,
+        visitor_company,
         visitor_information,
         visitor_interest,
         visitor_status,
@@ -136,7 +136,7 @@ const createNewVisit = async (req, res, next) => {
                 data: {
                     visitor_name,
                     visitor_phone: visitor_phone ?? null,
-                    visitor_address: visitor_address ?? null,
+                    visitor_company: visitor_company ?? null,
                     visitor_information: visitor_information ?? null,
                 }
             });

@@ -169,7 +169,7 @@ model visitor {
   visitor_name        String?  @db.VarChar
   visitor_phone       String?  @db.VarChar
   visitor_information String?  @db.VarChar
-  visitor_address     String?  @db.VarChar
+  visitor_company     String?  @db.VarChar
   created_at          DateTime @default(now()) @db.Timestamptz(6)
   updated_at          DateTime @default(now()) @db.Timestamptz(6)
   visit               visit[]

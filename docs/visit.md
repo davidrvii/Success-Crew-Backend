@@ -28,7 +28,7 @@ Authorization: Bearer <token>
       "created_at": "2026-01-21T03:30:27.000Z",
       "visitor_name": "John Doe",
       "visitor_phone": "08123456789",
-      "visitor_address": "Perusahaan A",
+      "visitor_company": "Perusahaan A",
       "visitor_information": "Informasi penting"
     }
   ]
@@ -58,7 +58,7 @@ Authorization: Bearer <token>
     "created_at": "2026-01-21T03:30:27.000Z",
     "visitor_name": "John Doe",
     "visitor_phone": "08123456789",
-    "visitor_address": "Perusahaan A",
+    "visitor_company": "Perusahaan A",
     "visitor_information": "Baru",
     "sales_name": "Sales A", 
     "follow_up": [],
