@@ -18,6 +18,8 @@ model attendance {
   created_at        DateTime  @default(now())
   updated_at        DateTime  @default(now())
   attendance_desc   String?
+  users             users     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_attendance_fk")
+  overtimes         overtimes[]
 }
 
 model leaves {
@@ -30,6 +32,7 @@ model leaves {
   leave_status  String   @db.VarChar
   created_at    DateTime @default(now()) @db.Timestamptz(6)
   updated_at    DateTime @default(now()) @db.Timestamptz(6)
+  users         users    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_leave_fk")
 }
 
 model notifications {
@@ -63,6 +66,8 @@ model overtimes {
   overtime_status String    @db.VarChar
   created_at      DateTime  @default(now()) @db.Timestamptz(6)
   updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+  users           users     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "user_overtime_fk")
+  attendance      attendance @relation(fields: [attendance_id], references: [attendance_id], onDelete: NoAction, onUpdate: NoAction, map: "attendance_overtime_fk")
 }
 
 model roles {
@@ -83,7 +88,10 @@ model users {
   user_photo    Bytes?
   created_at    DateTime        @default(now()) @db.Timestamptz(6)
   updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  attendance    attendance[]
+  leaves        leaves[]
   notifications notifications[]
+  overtimes     overtimes[]
   offices       offices         @relation(fields: [office_id], references: [office_id], onDelete: NoAction, onUpdate: NoAction, map: "office_user_fk")
   roles         roles           @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction, map: "role_user_fk")
   visit         visit[]
