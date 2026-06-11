@@ -367,14 +367,21 @@ const getVisitProductsSold = async (req, res, next) => {
 
 const createVisitProductSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
-    const { product_name, product_sold_type, quantity, price, notes, product_sold_category } = req.body
+    const {
+        product_sold_name, product_name, product_sold_type,
+        product_sold_quantity, quantity, qty,
+        product_sold_price, price,
+        product_sold_desc, notes, product_sold_category
+    } = req.body
 
     try {
-        const final_product_name = product_name || product_sold_type
-        const final_notes = notes || product_sold_category
+        const final_name = product_sold_name || product_name || product_sold_type
+        const final_quantity = product_sold_quantity || quantity || qty
+        const final_price = product_sold_price || price
+        const final_desc = product_sold_desc || notes || product_sold_category
 
-        if (!final_product_name) {
-            return response(400, null, 'Missing Required Field (product_name)', res)
+        if (!final_name) {
+            return response(400, null, 'Missing Required Field (product_sold_name)', res)
         }
 
         const existingVisit = await prisma.visit.findUnique({
@@ -389,10 +396,10 @@ const createVisitProductSold = async (req, res, next) => {
         const created = await prisma.product_sold.create({
             data: {
                 visit_id: visitId,
-                product_name: final_product_name,
-                quantity: quantity ? Number(quantity) : null,
-                price: price ? Number(price) : null,
-                notes: final_notes ?? null,
+                product_sold_name: final_name,
+                product_sold_quantity: final_quantity ? Number(final_quantity) : null,
+                product_sold_price: final_price ? Number(final_price) : null,
+                product_sold_desc: final_desc ?? null,
             },
         })
 
@@ -410,7 +417,12 @@ const createVisitProductSold = async (req, res, next) => {
 const updateVisitProductSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const productSoldId = Number(req.params.productSoldId)
-    const { product_name, product_sold_type, quantity, price, notes, product_sold_category } = req.body
+    const {
+        product_sold_name, product_name, product_sold_type,
+        product_sold_quantity, quantity, qty,
+        product_sold_price, price,
+        product_sold_desc, notes, product_sold_category
+    } = req.body
 
     try {
         const existing = await prisma.product_sold.findFirst({
@@ -422,13 +434,15 @@ const updateVisitProductSold = async (req, res, next) => {
         }
 
         const data = {}
-        const final_product_name = product_name || product_sold_type
-        const final_notes = notes || product_sold_category
+        const final_name = product_sold_name || product_name || product_sold_type
+        const final_quantity = product_sold_quantity || quantity || qty
+        const final_price = product_sold_price || price
+        const final_desc = product_sold_desc || notes || product_sold_category
 
-        if (final_product_name !== undefined) data.product_name = final_product_name
-        if (quantity !== undefined) data.quantity = quantity !== null ? Number(quantity) : null
-        if (price !== undefined) data.price = price !== null ? Number(price) : null
-        if (final_notes !== undefined) data.notes = final_notes
+        if (final_name !== undefined) data.product_sold_name = final_name
+        if (final_quantity !== undefined) data.product_sold_quantity = final_quantity !== null ? Number(final_quantity) : null
+        if (final_price !== undefined) data.product_sold_price = final_price !== null ? Number(final_price) : null
+        if (final_desc !== undefined) data.product_sold_desc = final_desc
 
         const updated = await prisma.product_sold.update({
             where: { product_sold_id: productSoldId },
@@ -501,14 +515,23 @@ const getVisitUnitsServiced = async (req, res, next) => {
 
 const createVisitUnitServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
-    const { unit_name, unit_serviced_type, issue, action, status, notes, unit_serviced_category } = req.body
+    const {
+        unit_serviced_name, unit_name, unit_serviced_type,
+        unit_serviced_issue, issue, problem,
+        unit_serviced_action, action, solution,
+        unit_serviced_status, status,
+        unit_serviced_desc, notes, unit_serviced_category
+    } = req.body
 
     try {
-        const final_unit_name = unit_name || unit_serviced_type
-        const final_notes = notes || unit_serviced_category
+        const final_name = unit_serviced_name || unit_name || unit_serviced_type
+        const final_issue = unit_serviced_issue || issue || problem
+        const final_action = unit_serviced_action || action || solution
+        const final_status = unit_serviced_status || status
+        const final_desc = unit_serviced_desc || notes || unit_serviced_category
 
-        if (!final_unit_name) {
-            return response(400, null, 'Missing Required Field (unit_name)', res)
+        if (!final_name) {
+            return response(400, null, 'Missing Required Field (unit_serviced_name)', res)
         }
 
         const existingVisit = await prisma.visit.findUnique({
@@ -523,11 +546,11 @@ const createVisitUnitServiced = async (req, res, next) => {
         const created = await prisma.unit_serviced.create({
             data: {
                 visit_id: visitId,
-                unit_name: final_unit_name,
-                issue: issue ?? null,
-                action: action ?? null,
-                status: status ?? null,
-                notes: final_notes ?? null,
+                unit_serviced_name: final_name,
+                unit_serviced_issue: final_issue ?? null,
+                unit_serviced_action: final_action ?? null,
+                unit_serviced_status: final_status ?? null,
+                unit_serviced_desc: final_desc ?? null,
             },
         })
 
@@ -545,7 +568,13 @@ const createVisitUnitServiced = async (req, res, next) => {
 const updateVisitUnitServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const unitServicedId = Number(req.params.unitServicedId)
-    const { unit_name, unit_serviced_type, issue, action, status, notes, unit_serviced_category } = req.body
+    const {
+        unit_serviced_name, unit_name, unit_serviced_type,
+        unit_serviced_issue, issue, problem,
+        unit_serviced_action, action, solution,
+        unit_serviced_status, status,
+        unit_serviced_desc, notes, unit_serviced_category
+    } = req.body
 
     try {
         const existing = await prisma.unit_serviced.findFirst({
@@ -557,14 +586,17 @@ const updateVisitUnitServiced = async (req, res, next) => {
         }
 
         const data = {}
-        const final_unit_name = unit_name || unit_serviced_type
-        const final_notes = notes || unit_serviced_category
+        const final_name = unit_serviced_name || unit_name || unit_serviced_type
+        const final_issue = unit_serviced_issue || issue || problem
+        const final_action = unit_serviced_action || action || solution
+        const final_status = unit_serviced_status || status
+        const final_desc = unit_serviced_desc || notes || unit_serviced_category
 
-        if (final_unit_name !== undefined) data.unit_name = final_unit_name
-        if (issue !== undefined) data.issue = issue
-        if (action !== undefined) data.action = action
-        if (status !== undefined) data.status = status
-        if (final_notes !== undefined) data.notes = final_notes
+        if (final_name !== undefined) data.unit_serviced_name = final_name
+        if (final_issue !== undefined) data.unit_serviced_issue = final_issue
+        if (final_action !== undefined) data.unit_serviced_action = final_action
+        if (final_status !== undefined) data.unit_serviced_status = final_status
+        if (final_desc !== undefined) data.unit_serviced_desc = final_desc
 
         const updated = await prisma.unit_serviced.update({
             where: { unit_serviced_id: unitServicedId },

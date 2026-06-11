@@ -318,10 +318,10 @@ Authorization: Bearer <token>
     {
       "product_sold_id": 1,
       "visit_id": 1,
-      "product_name": "Laptop",
-      "quantity": 1,
-      "price": 15000000.00,
-      "notes": "Gaming",
+      "product_sold_name": "Laptop",
+      "product_sold_quantity": 1,
+      "product_sold_price": 15000000.00,
+      "product_sold_desc": "Gaming",
       "created_at": "2026-01-21T03:30:27.000Z",
       "updated_at": "2026-01-21T03:30:27.000Z"
     }
@@ -338,10 +338,10 @@ Authorization: Bearer <token>
 - Request Body :
 ```json
 {
-  "product_name": "Laptop",
-  "quantity": 1,
-  "price": 15000000.00,
-  "notes": "Gaming"
+  "product_sold_name": "Laptop",
+  "product_sold_quantity": 1,
+  "product_sold_price": 15000000.00,
+  "product_sold_desc": "Gaming"
 }
 ```
 - Response Success :
@@ -352,10 +352,10 @@ Authorization: Bearer <token>
   "productSold": {
     "product_sold_id": 1,
     "visit_id": 1,
-    "product_name": "Laptop",
-    "quantity": 1,
-    "price": 15000000.00,
-    "notes": "Gaming",
+    "product_sold_name": "Laptop",
+    "product_sold_quantity": 1,
+    "product_sold_price": 15000000.00,
+    "product_sold_desc": "Gaming",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T03:30:27.000Z"
   }
@@ -379,8 +379,8 @@ Authorization: Bearer <token>
 - Request Body (optional):
 ```json
 {
-  "product_name": "PC",
-  "notes": "Office"
+  "product_sold_name": "PC",
+  "product_sold_desc": "Office"
 }
 ```
 - Response Success :
@@ -391,10 +391,10 @@ Authorization: Bearer <token>
   "productSold": {
     "product_sold_id": 1,
     "visit_id": 1,
-    "product_name": "PC",
-    "quantity": 1,
-    "price": 15000000.00,
-    "notes": "Office",
+    "product_sold_name": "PC",
+    "product_sold_quantity": 1,
+    "product_sold_price": 15000000.00,
+    "product_sold_desc": "Office",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T04:30:27.000Z"
   }
@@ -452,11 +452,11 @@ Authorization: Bearer <token>
     {
       "unit_serviced_id": 1,
       "visit_id": 1,
-      "unit_name": "Laptop",
-      "issue": "keyboard rusak",
-      "action": "ganti keyboard",
-      "status": "SELESAI",
-      "notes": "Cleaning",
+      "unit_serviced_name": "Laptop",
+      "unit_serviced_issue": "keyboard rusak",
+      "unit_serviced_action": "ganti keyboard",
+      "unit_serviced_status": "SELESAI",
+      "unit_serviced_desc": "Cleaning",
       "created_at": "2026-01-21T03:30:27.000Z",
       "updated_at": "2026-01-21T03:30:27.000Z"
     }
@@ -473,11 +473,11 @@ Authorization: Bearer <token>
 - Request Body :
 ```json
 {
-  "unit_name": "Laptop",
-  "issue": "keyboard rusak",
-  "action": "ganti keyboard",
-  "status": "SELESAI",
-  "notes": "Cleaning"
+  "unit_serviced_name": "Laptop",
+  "unit_serviced_issue": "keyboard rusak",
+  "unit_serviced_action": "ganti keyboard",
+  "unit_serviced_status": "SELESAI",
+  "unit_serviced_desc": "Cleaning"
 }
 ```
 - Response Success :
@@ -488,11 +488,11 @@ Authorization: Bearer <token>
   "unitServiced": {
     "unit_serviced_id": 1,
     "visit_id": 1,
-    "unit_name": "Laptop",
-    "issue": "keyboard rusak",
-    "action": "ganti keyboard",
-    "status": "SELESAI",
-    "notes": "Cleaning",
+    "unit_serviced_name": "Laptop",
+    "unit_serviced_issue": "keyboard rusak",
+    "unit_serviced_action": "ganti keyboard",
+    "unit_serviced_status": "SELESAI",
+    "unit_serviced_desc": "Cleaning",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T03:30:27.000Z"
   }
@@ -516,8 +516,8 @@ Authorization: Bearer <token>
 - Request Body (optional):
 ```json
 {
-  "unit_name": "Laptop",
-  "notes": "Install OS"
+  "unit_serviced_name": "Laptop",
+  "unit_serviced_desc": "Install OS"
 }
 ```
 - Response Success :
@@ -528,11 +528,11 @@ Authorization: Bearer <token>
   "unitServiced": {
     "unit_serviced_id": 1,
     "visit_id": 1,
-    "unit_name": "Laptop",
-    "issue": "keyboard rusak",
-    "action": "ganti keyboard",
-    "status": "SELESAI",
-    "notes": "Install OS",
+    "unit_serviced_name": "Laptop",
+    "unit_serviced_issue": "keyboard rusak",
+    "unit_serviced_action": "ganti keyboard",
+    "unit_serviced_status": "SELESAI",
+    "unit_serviced_desc": "Install OS",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T04:30:27.000Z"
   }
