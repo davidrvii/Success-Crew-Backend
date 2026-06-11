@@ -103,8 +103,10 @@ model overtimes {
 model product_sold {
   product_sold_id       Int      @id(map: "product_sold_pk") @default(autoincrement())
   visit_id              Int
-  product_sold_type     String   @db.VarChar
-  product_sold_category String   @db.VarChar
+  product_name          String   @db.VarChar
+  quantity              Int?
+  price                 Float?
+  notes                 String?  @db.VarChar
   created_at            DateTime @default(now()) @db.Timestamptz(6)
   updated_at            DateTime @default(now()) @db.Timestamptz(6)
   visit                 visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_product_sold_fk")
@@ -121,8 +123,11 @@ model roles {
 model unit_serviced {
   unit_serviced_id       Int      @id(map: "unit_serviced_pk") @default(autoincrement())
   visit_id               Int
-  unit_serviced_type     String   @db.VarChar
-  unit_serviced_category String   @db.VarChar
+  unit_name              String   @db.VarChar
+  issue                  String?  @db.VarChar
+  action                 String?  @db.VarChar
+  status                 String?  @db.VarChar
+  notes                  String?  @db.VarChar
   created_at             DateTime @default(now()) @db.Timestamptz(6)
   updated_at             DateTime @default(now()) @db.Timestamptz(6)
   visit                  visit    @relation(fields: [visit_id], references: [visit_id], onDelete: NoAction, onUpdate: NoAction, map: "visit_unit_serviced_fk")

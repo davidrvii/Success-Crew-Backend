@@ -367,11 +367,14 @@ const getVisitProductsSold = async (req, res, next) => {
 
 const createVisitProductSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
-    const { product_sold_type, product_sold_category } = req.body
+    const { product_name, product_sold_type, quantity, price, notes, product_sold_category } = req.body
 
     try {
-        if (!product_sold_type || !product_sold_category) {
-            return response(400, null, 'Missing Required Field', res)
+        const final_product_name = product_name || product_sold_type
+        const final_notes = notes || product_sold_category
+
+        if (!final_product_name) {
+            return response(400, null, 'Missing Required Field (product_name)', res)
         }
 
         const existingVisit = await prisma.visit.findUnique({
@@ -386,8 +389,10 @@ const createVisitProductSold = async (req, res, next) => {
         const created = await prisma.product_sold.create({
             data: {
                 visit_id: visitId,
-                product_sold_type,
-                product_sold_category,
+                product_name: final_product_name,
+                quantity: quantity ? Number(quantity) : null,
+                price: price ? Number(price) : null,
+                notes: final_notes ?? null,
             },
         })
 
@@ -405,7 +410,7 @@ const createVisitProductSold = async (req, res, next) => {
 const updateVisitProductSold = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const productSoldId = Number(req.params.productSoldId)
-    const { product_sold_type, product_sold_category } = req.body
+    const { product_name, product_sold_type, quantity, price, notes, product_sold_category } = req.body
 
     try {
         const existing = await prisma.product_sold.findFirst({
@@ -417,8 +422,13 @@ const updateVisitProductSold = async (req, res, next) => {
         }
 
         const data = {}
-        if (product_sold_type) data.product_sold_type = product_sold_type
-        if (product_sold_category) data.product_sold_category = product_sold_category
+        const final_product_name = product_name || product_sold_type
+        const final_notes = notes || product_sold_category
+
+        if (final_product_name !== undefined) data.product_name = final_product_name
+        if (quantity !== undefined) data.quantity = quantity !== null ? Number(quantity) : null
+        if (price !== undefined) data.price = price !== null ? Number(price) : null
+        if (final_notes !== undefined) data.notes = final_notes
 
         const updated = await prisma.product_sold.update({
             where: { product_sold_id: productSoldId },
@@ -491,11 +501,14 @@ const getVisitUnitsServiced = async (req, res, next) => {
 
 const createVisitUnitServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
-    const { unit_serviced_type, unit_serviced_category } = req.body
+    const { unit_name, unit_serviced_type, issue, action, status, notes, unit_serviced_category } = req.body
 
     try {
-        if (!unit_serviced_type || !unit_serviced_category) {
-            return response(400, null, 'Missing Required Field', res)
+        const final_unit_name = unit_name || unit_serviced_type
+        const final_notes = notes || unit_serviced_category
+
+        if (!final_unit_name) {
+            return response(400, null, 'Missing Required Field (unit_name)', res)
         }
 
         const existingVisit = await prisma.visit.findUnique({
@@ -510,8 +523,11 @@ const createVisitUnitServiced = async (req, res, next) => {
         const created = await prisma.unit_serviced.create({
             data: {
                 visit_id: visitId,
-                unit_serviced_type,
-                unit_serviced_category,
+                unit_name: final_unit_name,
+                issue: issue ?? null,
+                action: action ?? null,
+                status: status ?? null,
+                notes: final_notes ?? null,
             },
         })
 
@@ -529,7 +545,7 @@ const createVisitUnitServiced = async (req, res, next) => {
 const updateVisitUnitServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
     const unitServicedId = Number(req.params.unitServicedId)
-    const { unit_serviced_type, unit_serviced_category } = req.body
+    const { unit_name, unit_serviced_type, issue, action, status, notes, unit_serviced_category } = req.body
 
     try {
         const existing = await prisma.unit_serviced.findFirst({
@@ -541,8 +557,14 @@ const updateVisitUnitServiced = async (req, res, next) => {
         }
 
         const data = {}
-        if (unit_serviced_type) data.unit_serviced_type = unit_serviced_type
-        if (unit_serviced_category) data.unit_serviced_category = unit_serviced_category
+        const final_unit_name = unit_name || unit_serviced_type
+        const final_notes = notes || unit_serviced_category
+
+        if (final_unit_name !== undefined) data.unit_name = final_unit_name
+        if (issue !== undefined) data.issue = issue
+        if (action !== undefined) data.action = action
+        if (status !== undefined) data.status = status
+        if (final_notes !== undefined) data.notes = final_notes
 
         const updated = await prisma.unit_serviced.update({
             where: { unit_serviced_id: unitServicedId },
