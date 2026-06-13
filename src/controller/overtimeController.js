@@ -117,6 +117,17 @@ const updateOvertime = async (req, res, next) => {
             },
         })
 
+        if (overtime_status && (overtime_status.toUpperCase() === 'APPROVED' || overtime_status.toUpperCase() === 'DITERIMA')) {
+            if (existing.attendance_id) {
+                await prisma.attendance.update({
+                    where: { attendance_id: existing.attendance_id },
+                    data: {
+                        attendance_status: 'Lembur',
+                    },
+                })
+            }
+        }
+
         return response(200, {updatedOvertime: updated}, 'Update Overtime Status Success', res)
     } catch (error) {
         return next(error)

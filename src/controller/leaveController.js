@@ -97,10 +97,43 @@ const updateLeave = async (req, res, next) => {
             return response(404, null, 'Leave Not Found', res)
         }
 
+        let attendanceId = existing.attendance_id;
+
+        if (leave_status && (leave_status.toUpperCase() === 'APPROVED' || leave_status.toUpperCase() === 'DITERIMA')) {
+            const existingAttendance = await prisma.attendance.findFirst({
+                where: {
+                    user_id: existing.user_id,
+                    attendance_date: existing.leave_date,
+                }
+            });
+
+            if (!existingAttendance) {
+                const newAttendance = await prisma.attendance.create({
+                    data: {
+                        user_id: existing.user_id,
+                        attendance_status: 'Cuti',
+                        attendance_date: existing.leave_date,
+                        attendance_in: null,
+                        attendance_out: null,
+                    }
+                });
+                attendanceId = newAttendance.attendance_id;
+            } else {
+                await prisma.attendance.update({
+                    where: { attendance_id: existingAttendance.attendance_id },
+                    data: {
+                        attendance_status: 'Cuti',
+                    }
+                });
+                attendanceId = existingAttendance.attendance_id;
+            }
+        }
+
         const updated = await prisma.leaves.update({
             where: { leave_id: id },
             data: {
                 leave_status,
+                attendance_id: attendanceId,
             },
         })
 

@@ -25,7 +25,7 @@ model attendance {
 model leaves {
   leave_id      Int      @id(map: "leave_pk") @default(autoincrement())
   user_id       Int
-  attendance_id Int
+  attendance_id Int?
   leave_title   String   @db.VarChar
   leave_desc    String   @db.VarChar
   leave_date    DateTime @db.Date
