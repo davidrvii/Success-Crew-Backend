@@ -175,15 +175,15 @@ const createNewAttendance = async (req, res, next) => {
             return response(401, null, "Unauthorized", res);
         }
 
-        if (!attendance_status || !attendance_in || !attendance_date) {
-            return response(400, null, 'Missing Required Field', res)
+        if (!attendance_date) {
+            return response(400, null, 'Missing Required Field: attendance_date', res)
         }
 
         const created = await prisma.attendance.create({
             data: {
                 user_id: userId,
-                attendance_status,
-                attendance_in,
+                attendance_status: attendance_status || "Tidak Hadir",
+                attendance_in: attendance_in || null,
                 attendance_date,
             },
         })
@@ -199,13 +199,9 @@ const createNewAttendance = async (req, res, next) => {
 
 const updateAttendance = async (req, res, next) => {
     const id = Number(req.params.id)
-    const { attendance_out } = req.body
+    const { attendance_out, attendance_in, attendance_status } = req.body
 
     try {
-        if (!attendance_out) {
-            return response(400, null, 'attendance_out is required', res)
-        }
-
         const existing = await prisma.attendance.findUnique({
             where: { attendance_id: id },
         })
@@ -214,11 +210,24 @@ const updateAttendance = async (req, res, next) => {
             return response(404, null, 'Attendance Not Found', res)
         }
 
+        const dataToUpdate = {};
+        if (attendance_out !== undefined) {
+            dataToUpdate.attendance_out = attendance_out;
+        }
+        if (attendance_in !== undefined) {
+            dataToUpdate.attendance_in = attendance_in;
+        }
+        if (attendance_status !== undefined) {
+            dataToUpdate.attendance_status = attendance_status;
+        }
+
+        if (Object.keys(dataToUpdate).length === 0) {
+            return response(400, null, 'No fields to update provided', res)
+        }
+
         const updated = await prisma.attendance.update({
             where: { attendance_id: id },
-            data: {
-                attendance_out,
-            },
+            data: dataToUpdate,
         })
 
         return response(200, {attendanceOut: updated}, 'Update Attendance (Check-out) Success', res)
