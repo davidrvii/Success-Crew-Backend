@@ -3,15 +3,15 @@ const response = require('../../response')
 
 const getAllAttendance = async (req, res, next) => {
     try {
-        const usersWithHistory = await prisma.users.findMany({
+        const usersWithHistory = await prisma.user.findMany({
             include: {
                 attendance: {
                     orderBy: { attendance_date: 'desc' },
                     include: {
-                        overtimes: true,
+                        overtime: true,
                     },
                 },
-                leaves: {
+                leave: {
                     orderBy: { leave_date: 'desc' },
                 },
             },
@@ -21,16 +21,15 @@ const getAllAttendance = async (req, res, next) => {
             user_id: u.user_id,
             user_name: u.user_name,
             user_email: u.user_email,
-            attendances: u.attendance.map((a) => ({
+            attendances: (u.attendance || []).map((a) => ({
                 attendance_id: a.attendance_id,
                 attendance_status: a.attendance_status,
                 attendance_in: a.attendance_in,
                 attendance_out: a.attendance_out,
-                attendance_desc: a.attendance_desc,
                 attendance_date: a.attendance_date,
                 created_at: a.created_at,
                 updated_at: a.updated_at,
-                overtimes: (a.overtimes || []).map((o) => ({
+                overtimes: (a.overtime || []).map((o) => ({
                     overtime_id: o.overtime_id,
                     overtime_desc: o.overtime_desc,
                     overtime_date: o.overtime_date,
@@ -41,9 +40,8 @@ const getAllAttendance = async (req, res, next) => {
                     updated_at: o.updated_at,
                 })),
             })),
-            leaves: u.leaves.map((l) => ({
+            leaves: (u.leave || []).map((l) => ({
                 leave_id: l.leave_id,
-                leave_title: l.leave_title,
                 leave_desc: l.leave_desc,
                 leave_date: l.leave_date,
                 leave_status: l.leave_status,
@@ -62,13 +60,13 @@ const getCrewAttendance = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
-        const userWithHistory = await prisma.users.findUnique({
+        const userWithHistory = await prisma.user.findUnique({
             where: { user_id: userId },
             include: {
                 attendance: {
                     orderBy: { attendance_date: 'desc' },
                     include: {
-                        overtimes: {
+                        overtime: {
                             select: {
                                 overtime_id: true,
                                 overtime_start: true,
@@ -77,7 +75,7 @@ const getCrewAttendance = async (req, res, next) => {
                         },
                     },
                 },
-                leaves: {
+                leave: {
                     orderBy: { leave_date: 'desc' },
                 },
             },
@@ -91,20 +89,18 @@ const getCrewAttendance = async (req, res, next) => {
             user_id: userWithHistory.user_id,
             user_name: userWithHistory.user_name,
             user_email: userWithHistory.user_email,
-            attendances: userWithHistory.attendance.map((a) => ({
+            attendances: (userWithHistory.attendance || []).map((a) => ({
                 attendance_id: a.attendance_id,
                 attendance_status: a.attendance_status,
                 attendance_in: a.attendance_in,
                 attendance_out: a.attendance_out,
-                attendance_desc: a.attendance_desc,
                 attendance_date: a.attendance_date,
                 created_at: a.created_at,
                 updated_at: a.updated_at,
-                overtimes: a.overtimes || [],
+                overtimes: a.overtime || [],
             })),
-            leaves: userWithHistory.leaves.map((l) => ({
+            leaves: (userWithHistory.leave || []).map((l) => ({
                 leave_id: l.leave_id,
-                leave_title: l.leave_title,
                 leave_desc: l.leave_desc,
                 leave_date: l.leave_date,
                 leave_status: l.leave_status,
@@ -126,7 +122,7 @@ const getAttendanceDetail = async (req, res, next) => {
         const a = await prisma.attendance.findUnique({
             where: { attendance_id: id },
             include: {
-                overtimes: true,
+                overtime: true,
             },
         })
 
@@ -140,11 +136,10 @@ const getAttendanceDetail = async (req, res, next) => {
             attendance_status: a.attendance_status,
             attendance_in: a.attendance_in,
             attendance_out: a.attendance_out,
-            attendance_desc: a.attendance_desc,
             attendance_date: a.attendance_date,
             created_at: a.created_at,
             updated_at: a.updated_at,
-            overtimes: (a.overtimes || []).map((o) => ({
+            overtimes: (a.overtime || []).map((o) => ({
                 overtime_id: o.overtime_id,
                 overtime_desc: o.overtime_desc,
                 overtime_date: o.overtime_date,
@@ -183,8 +178,8 @@ const createNewAttendance = async (req, res, next) => {
             data: {
                 user_id: userId,
                 attendance_status: attendance_status || "Tidak Hadir",
-                attendance_in: attendance_in || null,
-                attendance_date,
+                attendance_in: attendance_in ? new Date(attendance_in) : null,
+                attendance_date: new Date(attendance_date),
             },
         })
 
@@ -212,10 +207,10 @@ const updateAttendance = async (req, res, next) => {
 
         const dataToUpdate = {};
         if (attendance_out !== undefined) {
-            dataToUpdate.attendance_out = attendance_out;
+            dataToUpdate.attendance_out = attendance_out ? new Date(attendance_out) : null;
         }
         if (attendance_in !== undefined) {
-            dataToUpdate.attendance_in = attendance_in;
+            dataToUpdate.attendance_in = attendance_in ? new Date(attendance_in) : null;
         }
         if (attendance_status !== undefined) {
             dataToUpdate.attendance_status = attendance_status;

@@ -6,7 +6,7 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
 
 ## Register User
 - Endpoint : `/user/register`
@@ -18,7 +18,13 @@ Authorization: Bearer <token>
   "role_id": 3,
   "user_name": "Budi",
   "user_email": "budi@mail.com",
-  "user_password": "password123"
+  "user_password": "password123",
+  "user_phone": "081234567890",
+  "user_birth": "1995-10-24",
+  "start_work": "2026-01-01",
+  "end_work": null,
+  "crew_status": "ACTIVE",
+  "contract_status": "KONTRAK"
 }
 ```
 - Response Success :
@@ -32,6 +38,12 @@ Authorization: Bearer <token>
     "role_id": 3,
     "user_name": "Budi",
     "user_email": "budi@mail.com",
+    "user_phone": "081234567890",
+    "user_birth": "1995-10-24T00:00:00.000Z",
+    "start_work": "2026-01-01T00:00:00.000Z",
+    "end_work": null,
+    "crew_status": "ACTIVE",
+    "contract_status": "KONTRAK",
     "created_at": "2026-01-21T03:30:27.000Z"
   }
 }
@@ -124,6 +136,12 @@ Authorization: Bearer <token>
     "user_name": "Budi",
     "user_email": "budi@mail.com",
     "user_photo": null,
+    "user_phone": "081234567890",
+    "user_birth": "1995-10-24T00:00:00.000Z",
+    "start_work": "2026-01-01T00:00:00.000Z",
+    "end_work": null,
+    "crew_status": "ACTIVE",
+    "contract_status": "KONTRAK",
     "role_name": "Sales",
     "office_name": "Office A",
     "created_at": "2026-01-21T03:30:27.000Z",
@@ -180,6 +198,12 @@ Authorization: Bearer <token>
   - `user_name` (string)
   - `user_email` (string)
   - `user_password` (string) → will be hashed
+  - `user_phone` (string)
+  - `user_birth` (string/date, format: YYYY-MM-DD)
+  - `start_work` (string/date, format: YYYY-MM-DD)
+  - `end_work` (string/date, format: YYYY-MM-DD)
+  - `crew_status` (string)
+  - `contract_status` (string)
   - `user_image` (file) → uploaded to server, path stored in user_photo column (VARCHAR)
 - Response Success :
 ```json
@@ -192,7 +216,13 @@ Authorization: Bearer <token>
     "role_id": 3,
     "user_name": "Budi Update",
     "user_email": "budi@mail.com",
-    "user_photo": null,
+    "user_photo": "/uploads/images/filename.jpg",
+    "user_phone": "081234567890",
+    "user_birth": "1995-10-24T00:00:00.000Z",
+    "start_work": "2026-01-01T00:00:00.000Z",
+    "end_work": null,
+    "crew_status": "ACTIVE",
+    "contract_status": "KONTRAK",
     "role_name": "Sales",
     "office_name": "Office A",
     "updated_at": "2026-01-21T04:30:27.000Z"

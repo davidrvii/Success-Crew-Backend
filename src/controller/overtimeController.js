@@ -3,7 +3,7 @@ const response = require('../../response')
 
 const getAllOvertime = async (req, res, next) => {
     try {
-        const overtimes = await prisma.overtimes.findMany({
+        const overtimes = await prisma.overtime.findMany({
             orderBy: { overtime_date: 'desc' },
         })
 
@@ -17,7 +17,7 @@ const getCrewOvertime = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
-        const overtimes = await prisma.overtimes.findMany({
+        const overtimes = await prisma.overtime.findMany({
             where: { user_id: userId },
             orderBy: { overtime_date: 'desc' },
         })
@@ -32,7 +32,7 @@ const getOvertimeDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
-        const overtime = await prisma.overtimes.findUnique({
+        const overtime = await prisma.overtime.findUnique({
             where: { overtime_id: id },
         })
 
@@ -79,13 +79,13 @@ const createNewOvertime = async (req, res, next) => {
             user_id: userId,
             attendance_id: Number(attendance_id),
             overtime_desc: overtime_desc || null,
-            overtime_date,
-            overtime_start,
-            overtime_end,
+            overtime_date: overtime_date ? new Date(overtime_date) : null,
+            overtime_start: overtime_start ? new Date(overtime_start) : null,
+            overtime_end: overtime_end ? new Date(overtime_end) : null,
             overtime_status: overtime_status || 'PENDING',
         }
 
-        const created = await prisma.overtimes.create({ data })
+        const created = await prisma.overtime.create({ data })
 
         return response(201, {newOvertime: created}, 'Create Overtime Success', res)
     } catch (error) {
@@ -102,7 +102,7 @@ const updateOvertime = async (req, res, next) => {
             return response(400, null, 'overtime_status is required', res)
         }
 
-        const existing = await prisma.overtimes.findUnique({
+        const existing = await prisma.overtime.findUnique({
             where: { overtime_id: id },
         })
 
@@ -110,7 +110,7 @@ const updateOvertime = async (req, res, next) => {
             return response(404, null, 'Overtime Not Found', res)
         }
 
-        const updated = await prisma.overtimes.update({
+        const updated = await prisma.overtime.update({
             where: { overtime_id: id },
             data: {
                 overtime_status,
@@ -138,7 +138,7 @@ const deleteOvertime = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
-        const existing = await prisma.overtimes.findUnique({
+        const existing = await prisma.overtime.findUnique({
             where: { overtime_id: id },
             select: { overtime_id: true },
         })
@@ -147,7 +147,7 @@ const deleteOvertime = async (req, res, next) => {
             return response(404, null, 'Overtime Not Found', res)
         }
 
-        await prisma.overtimes.delete({
+        await prisma.overtime.delete({
             where: { overtime_id: id },
         })
 

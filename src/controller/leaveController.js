@@ -3,7 +3,7 @@ const response = require('../../response')
 
 const getAllLeave = async (req, res, next) => {
     try {
-        const leaves = await prisma.leaves.findMany({
+        const leaves = await prisma.leave.findMany({
             orderBy: { leave_date: 'desc' },
         })
 
@@ -17,7 +17,7 @@ const getCrewLeave = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
-        const leaves = await prisma.leaves.findMany({
+        const leaves = await prisma.leave.findMany({
             where: { user_id: userId },
             orderBy: { leave_date: 'desc' },
         })
@@ -32,7 +32,7 @@ const getLeaveDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
-        const leave = await prisma.leaves.findUnique({
+        const leave = await prisma.leave.findUnique({
             where: { leave_id: id },
         })
 
@@ -48,7 +48,6 @@ const getLeaveDetail = async (req, res, next) => {
 
 const createNewLeave = async (req, res, next) => {
     const {
-        leave_title,
         leave_desc,
         leave_date,
         leave_status,
@@ -60,19 +59,18 @@ const createNewLeave = async (req, res, next) => {
             return response(401, null, "Unauthorized", res);
         }
 
-        if (!leave_title || !leave_date) {
-            return response(400, null, 'Missing Required Field', res)
+        if (!leave_desc || !leave_date) {
+            return response(400, null, 'Missing Required Field: leave_desc and leave_date are required', res)
         }
 
         const data = {
             user_id: userId,
-            leave_title,
-            leave_desc: leave_desc || null,
-            leave_date,
+            leave_desc,
+            leave_date: new Date(leave_date),
             leave_status: leave_status || 'PENDING',
         }
 
-        const created = await prisma.leaves.create({ data })
+        const created = await prisma.leave.create({ data })
 
         return response(201, {newLeave: created}, 'Create Leave Success', res)
     } catch (error) {
@@ -89,15 +87,13 @@ const updateLeave = async (req, res, next) => {
             return response(400, null, 'leave_status is required', res)
         }
 
-        const existing = await prisma.leaves.findUnique({
+        const existing = await prisma.leave.findUnique({
             where: { leave_id: id },
         })
 
         if (!existing) {
             return response(404, null, 'Leave Not Found', res)
         }
-
-        let attendanceId = existing.attendance_id;
 
         if (leave_status && (leave_status.toUpperCase() === 'APPROVED' || leave_status.toUpperCase() === 'DITERIMA')) {
             const existingAttendance = await prisma.attendance.findFirst({
@@ -108,7 +104,7 @@ const updateLeave = async (req, res, next) => {
             });
 
             if (!existingAttendance) {
-                const newAttendance = await prisma.attendance.create({
+                await prisma.attendance.create({
                     data: {
                         user_id: existing.user_id,
                         attendance_status: 'Cuti',
@@ -117,7 +113,6 @@ const updateLeave = async (req, res, next) => {
                         attendance_out: null,
                     }
                 });
-                attendanceId = newAttendance.attendance_id;
             } else {
                 await prisma.attendance.update({
                     where: { attendance_id: existingAttendance.attendance_id },
@@ -125,15 +120,13 @@ const updateLeave = async (req, res, next) => {
                         attendance_status: 'Cuti',
                     }
                 });
-                attendanceId = existingAttendance.attendance_id;
             }
         }
 
-        const updated = await prisma.leaves.update({
+        const updated = await prisma.leave.update({
             where: { leave_id: id },
             data: {
                 leave_status,
-                attendance_id: attendanceId,
             },
         })
 
@@ -147,7 +140,7 @@ const deleteLeave = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
-        const existing = await prisma.leaves.findUnique({
+        const existing = await prisma.leave.findUnique({
             where: { leave_id: id },
             select: { leave_id: true },
         })
@@ -156,7 +149,7 @@ const deleteLeave = async (req, res, next) => {
             return response(404, null, 'Leave Not Found', res)
         }
 
-        await prisma.leaves.delete({
+        await prisma.leave.delete({
             where: { leave_id: id },
         })
 

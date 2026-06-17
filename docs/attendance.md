@@ -6,7 +6,7 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
 
 ## Get All Attendance (Testing/Admin)
 - Endpoint : `/attendance/admin`
@@ -25,7 +25,6 @@ Authorization: Bearer <token>
       "attendance_status": "PRESENT",
       "attendance_in": "2026-01-21T01:00:00.000Z",
       "attendance_out": "2026-01-21T10:00:00.000Z",
-      "attendance_desc": null,
       "attendance_date": "2026-01-21",
       "created_at": "2026-01-21T01:00:00.000Z",
       "updated_at": "2026-01-21T10:00:00.000Z",
@@ -56,14 +55,13 @@ Authorization: Bearer <token>
       "attendance_status": "PRESENT",
       "attendance_in": "2026-01-21T01:00:00.000Z",
       "attendance_out": null,
-      "attendance_desc": null,
       "attendance_date": "2026-01-21",
       "created_at": "2026-01-21T01:00:00.000Z",
       "updated_at": "2026-01-21T01:00:00.000Z",
       "leaves": [
         {
           "leave_id": 3,
-          "leave_title": "Cuti Tahunan",
+          "leave_desc": "Cuti Tahunan",
           "leave_status": "PENDING"
         }
       ],
@@ -97,7 +95,6 @@ Authorization: Bearer <token>
     "attendance_status": "PRESENT",
     "attendance_in": "2026-01-21T01:00:00.000Z",
     "attendance_out": "2026-01-21T10:00:00.000Z",
-    "attendance_desc": null,
     "attendance_date": "2026-01-21",
     "created_at": "2026-01-21T01:00:00.000Z",
     "updated_at": "2026-01-21T10:00:00.000Z",
@@ -137,7 +134,6 @@ Authorization: Bearer <token>
     "attendance_status": "PRESENT",
     "attendance_in": "2026-01-21T01:00:00.000Z",
     "attendance_out": null,
-    "attendance_desc": null,
     "attendance_date": "2026-01-21",
     "created_at": "2026-01-21T01:00:00.000Z",
     "updated_at": "2026-01-21T01:00:00.000Z"
@@ -182,18 +178,10 @@ Authorization: Bearer <token>
     "attendance_status": "PRESENT",
     "attendance_in": "2026-01-21T01:00:00.000Z",
     "attendance_out": "2026-01-21T10:00:00.000Z",
-    "attendance_desc": null,
     "attendance_date": "2026-01-21",
     "created_at": "2026-01-21T01:00:00.000Z",
     "updated_at": "2026-01-21T10:00:00.000Z"
   }
-}
-```
-- Response Error (attendance_out missing) :
-```json
-{
-  "statusCode": 400,
-  "message": "attendance_out is required"
 }
 ```
 - Response Error (Not found) :

@@ -3,7 +3,7 @@ const response = require('../../response')
 
 const getAllNotification = async (req, res, next) => {
     try {
-        const notifications = await prisma.notifications.findMany({
+        const notifications = await prisma.notification.findMany({
             orderBy: { created_at: 'desc' },
         })
 
@@ -17,7 +17,7 @@ const getHistoryNotification = async (req, res, next) => {
     const userId = Number(req.params.id)
 
     try {
-        const notifications = await prisma.notifications.findMany({
+        const notifications = await prisma.notification.findMany({
             where: { user_id: userId },
             orderBy: { created_at: 'desc' },
         })
@@ -32,7 +32,7 @@ const getNotificationDetail = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
-        const notification = await prisma.notifications.findUnique({
+        const notification = await prisma.notification.findUnique({
             where: { notification_id: id },
         })
 
@@ -66,7 +66,7 @@ const createNewNotification = async (req, res, next) => {
             is_read: typeof is_read === 'boolean' ? is_read : false,
         }
 
-        const created = await prisma.notifications.create({ data })
+        const created = await prisma.notification.create({ data })
 
         return response(
             201, {notificationCreated: created}, 'Create Notification Success', res)
@@ -80,7 +80,7 @@ const updateNotification = async (req, res, next) => {
     const { user_id, notification_title, notification_desc, is_read } = req.body
 
     try {
-        const existing = await prisma.notifications.findUnique({
+        const existing = await prisma.notification.findUnique({
             where: { notification_id: id },
         })
 
@@ -95,7 +95,7 @@ const updateNotification = async (req, res, next) => {
         if (notification_desc) data.notification_desc = notification_desc
         if (typeof is_read === 'boolean') data.is_read = is_read
 
-        const updated = await prisma.notifications.update({
+        const updated = await prisma.notification.update({
             where: { notification_id: id },
             data,
         })
@@ -110,7 +110,7 @@ const deleteNotification = async (req, res, next) => {
     const id = Number(req.params.id)
 
     try {
-        const existing = await prisma.notifications.findUnique({
+        const existing = await prisma.notification.findUnique({
             where: { notification_id: id },
             select: { notification_id: true },
         })
@@ -119,7 +119,7 @@ const deleteNotification = async (req, res, next) => {
             return response(404, null, 'Notification Not Found', res)
         }
 
-        await prisma.notifications.delete({
+        await prisma.notification.delete({
             where: { notification_id: id },
         })
 

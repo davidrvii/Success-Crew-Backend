@@ -11,7 +11,7 @@ const getAllVisit = async (req, res, next) => {
             orderBy: { created_at: 'desc' },
             include: {
                 visitor: true,
-                users: {
+                user: {
                     select: {
                         user_id: true,
                         user_name: true,
@@ -38,11 +38,13 @@ const getAllVisit = async (req, res, next) => {
                 visitor_status: lastStatus,
                 visit_type: visit.visit_type,
                 visit_desc: visit.visit_desc,
+                visit_sales: visit.visit_sales,
+                user_id: visit.user_id,
                 created_at: visit.created_at,
                 visitor_name: visit.visitor?.visitor_name || null,
                 visitor_phone: visit.visitor?.visitor_phone || null,
                 visitor_company: visit.visitor?.visitor_company || null,
-                visitor_information: visit.visitor?.visitor_information || null,
+                visitor_category: visit.visitor?.visitor_category || null,
             };
         });
 
@@ -65,7 +67,7 @@ const getVisitDetail = async (req, res, next) => {
             where: { visit_id: id },
             include: {
                 visitor: true,
-                users: {
+                user: {
                     select: {
                         user_id: true,
                         user_name: true,
@@ -94,12 +96,14 @@ const getVisitDetail = async (req, res, next) => {
             visitor_status: lastStatus,
             visit_type: visit.visit_type,
             visit_desc: visit.visit_desc,
+            visit_sales: visit.visit_sales,
+            user_id: visit.user_id,
             created_at: visit.created_at,
             visitor_name: visit.visitor?.visitor_name || null,
             visitor_phone: visit.visitor?.visitor_phone || null,
             visitor_company: visit.visitor?.visitor_company || null,
-            visitor_information: visit.visitor?.visitor_information || null,
-            sales_name: visit.users?.user_name || null,
+            visitor_category: visit.visitor?.visitor_category || null,
+            sales_name: visit.user?.user_name || null,
             follow_up: visit.follow_up,
             product_sold: visit.product_sold,
             unit_serviced: visit.unit_serviced,
@@ -122,15 +126,18 @@ const createNewVisit = async (req, res, next) => {
         visitor_name,
         visitor_phone,
         visitor_company,
+        visitor_category,
         visitor_information,
         visitor_interest,
         visitor_status,
         visit_type,
-        visit_desc
+        visit_desc,
+        user_id,
+        visit_sales
     } = req.body;
 
     try {
-        const userId = Number(req.userData?.user_id);
+        const userId = user_id ? Number(user_id) : Number(req.userData?.user_id);
         if (!userId) {
             return response(401, null, "Unauthorized", res);
         }
@@ -152,7 +159,7 @@ const createNewVisit = async (req, res, next) => {
                     visitor_name,
                     visitor_phone: visitor_phone ?? null,
                     visitor_company: visitor_company ?? null,
-                    visitor_information: visitor_information ?? null,
+                    visitor_category: visitor_category || visitor_information || null,
                 }
             });
             targetVisitorId = newVisitor.visitor_id;
@@ -166,6 +173,7 @@ const createNewVisit = async (req, res, next) => {
                 visitor_status,
                 visit_type,
                 visit_desc: visit_desc ?? null,
+                visit_sales: visit_sales ?? null,
             },
         });
 
@@ -180,6 +188,7 @@ const updateVisit = async (req, res, next) => {
     const {
         visitor_id,
         user_id,
+        visit_sales,
         visitor_interest,
         visitor_status,
         visit_type,
@@ -199,6 +208,7 @@ const updateVisit = async (req, res, next) => {
 
         if (visitor_id !== undefined) data.visitor_id = Number(visitor_id);
         if (user_id !== undefined) data.user_id = Number(user_id);
+        if (visit_sales !== undefined) data.visit_sales = visit_sales;
         if (visitor_interest !== undefined) data.visitor_interest = visitor_interest;
         if (visitor_status !== undefined) data.visitor_status = visitor_status;
         if (visit_type !== undefined) data.visit_type = visit_type;
@@ -214,7 +224,6 @@ const updateVisit = async (req, res, next) => {
         return next(error);
     }
 };
-
 
 const deleteVisit = async (req, res, next) => {
     const id = Number(req.params.id)
@@ -386,7 +395,6 @@ const deleteVisitFollowUp = async (req, res, next) => {
     }
 };
 
-
 /* ============================
  * PRODUCT SOLD
  * ============================ */
@@ -415,14 +423,14 @@ const createVisitProductSold = async (req, res, next) => {
     const {
         product_sold_name, product_name, product_sold_type,
         product_sold_quantity, quantity, qty,
-        product_sold_price, price,
+        product_sold_total, product_sold_price, price,
         product_sold_desc, notes, product_sold_category
     } = req.body
 
     try {
         const final_name = product_sold_name || product_name || product_sold_type
         const final_quantity = product_sold_quantity || quantity || qty
-        const final_price = product_sold_price || price
+        const final_total = product_sold_total || product_sold_price || price
         const final_desc = product_sold_desc || notes || product_sold_category
 
         if (!final_name) {
@@ -443,7 +451,7 @@ const createVisitProductSold = async (req, res, next) => {
                 visit_id: visitId,
                 product_sold_name: final_name,
                 product_sold_quantity: final_quantity ? Number(final_quantity) : null,
-                product_sold_price: final_price ? Number(final_price) : null,
+                product_sold_total: final_total ? Number(final_total) : null,
                 product_sold_desc: final_desc ?? null,
             },
         })
@@ -465,7 +473,7 @@ const updateVisitProductSold = async (req, res, next) => {
     const {
         product_sold_name, product_name, product_sold_type,
         product_sold_quantity, quantity, qty,
-        product_sold_price, price,
+        product_sold_total, product_sold_price, price,
         product_sold_desc, notes, product_sold_category
     } = req.body
 
@@ -481,12 +489,12 @@ const updateVisitProductSold = async (req, res, next) => {
         const data = {}
         const final_name = product_sold_name || product_name || product_sold_type
         const final_quantity = product_sold_quantity || quantity || qty
-        const final_price = product_sold_price || price
+        const final_total = product_sold_total || product_sold_price || price
         const final_desc = product_sold_desc || notes || product_sold_category
 
         if (final_name !== undefined) data.product_sold_name = final_name
         if (final_quantity !== undefined) data.product_sold_quantity = final_quantity !== null ? Number(final_quantity) : null
-        if (final_price !== undefined) data.product_sold_price = final_price !== null ? Number(final_price) : null
+        if (final_total !== undefined) data.product_sold_total = final_total !== null ? Number(final_total) : null
         if (final_desc !== undefined) data.product_sold_desc = final_desc
 
         const updated = await prisma.product_sold.update({
@@ -537,7 +545,6 @@ const deleteVisitProductSold = async (req, res, next) => {
 /* ============================
  * UNIT SERVICED
  * ============================ */
-
 const getVisitUnitsServiced = async (req, res, next) => {
     const visitId = Number(req.params.id)
 
@@ -689,7 +696,6 @@ const deleteVisitUnitServiced = async (req, res, next) => {
 }
 
 module.exports = {
-
     getAllVisit,
     getVisitDetail,
     createNewVisit,

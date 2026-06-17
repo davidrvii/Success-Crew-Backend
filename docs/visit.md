@@ -6,7 +6,7 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
 
 ## Visit - Get All Visit (Testing/Admin)
 - Endpoint : `/visit/admin`
@@ -25,17 +25,18 @@ Authorization: Bearer <token>
       "visitor_status": "NEW",
       "visit_type": "WALK_IN",
       "visit_desc": "Ingin lihat stok dan promo",
+      "visit_sales": "Sales notes / name",
+      "user_id": 10,
       "created_at": "2026-01-21T03:30:27.000Z",
       "visitor_name": "John Doe",
       "visitor_phone": "08123456789",
       "visitor_company": "Perusahaan A",
-      "visitor_information": "Informasi penting"
+      "visitor_category": "VIP"
     }
   ]
 }
-
 ```
-> This endpoint includes relations: `follow_up`, `product_sold`, `unit_serviced`.
+> This endpoint includes relations: `follow_up`, `product_sold`, and `unit_serviced`.
 
 ## Visit - Get Visit Detail
 - Endpoint : `/visit/detail/:id`
@@ -55,11 +56,13 @@ Authorization: Bearer <token>
     "visitor_status": "Follow Up",
     "visit_type": "WALK_IN",
     "visit_desc": "Ingin lihat stok dan promo",
+    "visit_sales": "Sales notes / name",
+    "user_id": 10,
     "created_at": "2026-01-21T03:30:27.000Z",
     "visitor_name": "John Doe",
     "visitor_phone": "08123456789",
     "visitor_company": "Perusahaan A",
-    "visitor_information": "Baru",
+    "visitor_category": "VIP",
     "sales_name": "Sales A", 
     "follow_up": [],
     "product_sold": [],
@@ -83,12 +86,21 @@ Authorization: Bearer <token>
 ```json
 {
   "visitor_interest": "Laptop gaming",
-  "visitor_status": "NEW"
+  "visitor_status": "NEW",
+  "visit_type": "WALK_IN",
+  "visitor_name": "John Doe",
+  "visitor_phone": "08123456789",
+  "visitor_company": "Perusahaan A",
+  "visitor_category": "VIP",
+  "visit_desc": "Mau tanya promo dan cicilan",
+  "user_id": 10,
+  "visit_sales": "Sales notes / name"
 }
 ```
 - Required :
   - `visitor_interest`
   - `visitor_status`
+  - `visit_type`
 - Response Success :
 ```json
 {
@@ -102,6 +114,7 @@ Authorization: Bearer <token>
     "visitor_status": "NEW",
     "visit_type": "WALK_IN",
     "visit_desc": "Mau tanya promo dan cicilan",
+    "visit_sales": "Sales notes / name",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T03:30:27.000Z"
   }
@@ -126,6 +139,7 @@ Authorization: Bearer <token>
 {
   "visitor_id": 5,
   "user_id": 10,
+  "visit_sales": "Sales notes update",
   "visitor_interest": "Laptop untuk kerja",
   "visitor_status": "FOLLOW_UP"
 }
@@ -143,6 +157,7 @@ Authorization: Bearer <token>
     "visitor_status": "FOLLOW_UP",
     "visit_type": "APPOINTMENT",
     "visit_desc": "Mau tanya promo dan cicilan",
+    "visit_sales": "Sales notes update",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T04:30:27.000Z"
   }
@@ -320,7 +335,7 @@ Authorization: Bearer <token>
       "visit_id": 1,
       "product_sold_name": "Laptop",
       "product_sold_quantity": 1,
-      "product_sold_price": 15000000.00,
+      "product_sold_total": 15000000.00,
       "product_sold_desc": "Gaming",
       "created_at": "2026-01-21T03:30:27.000Z",
       "updated_at": "2026-01-21T03:30:27.000Z"
@@ -340,7 +355,7 @@ Authorization: Bearer <token>
 {
   "product_sold_name": "Laptop",
   "product_sold_quantity": 1,
-  "product_sold_price": 15000000.00,
+  "product_sold_total": 15000000.00,
   "product_sold_desc": "Gaming"
 }
 ```
@@ -354,7 +369,7 @@ Authorization: Bearer <token>
     "visit_id": 1,
     "product_sold_name": "Laptop",
     "product_sold_quantity": 1,
-    "product_sold_price": 15000000.00,
+    "product_sold_total": 15000000.00,
     "product_sold_desc": "Gaming",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T03:30:27.000Z"
@@ -380,7 +395,8 @@ Authorization: Bearer <token>
 ```json
 {
   "product_sold_name": "PC",
-  "product_sold_desc": "Office"
+  "product_sold_desc": "Office",
+  "product_sold_total": 12000000.00
 }
 ```
 - Response Success :
@@ -393,7 +409,7 @@ Authorization: Bearer <token>
     "visit_id": 1,
     "product_sold_name": "PC",
     "product_sold_quantity": 1,
-    "product_sold_price": 15000000.00,
+    "product_sold_total": 12000000.00,
     "product_sold_desc": "Office",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T04:30:27.000Z"
