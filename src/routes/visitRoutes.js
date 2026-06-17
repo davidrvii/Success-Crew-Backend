@@ -3,15 +3,20 @@ const visitController = require('../controller/visitController')
 const { authentication , authorization } = require('../middleware/auth')
 
 //visit
-router.get('/admin', visitController.getAllVisit)
-
-router.get('/detail/:id', authentication, visitController.getVisitDetail)
+router.get('/all', visitController.getAllVisit)
+router.get('/list', visitController.getVisitList)
+router.get('/stats', visitController.getVisitStats)
+router.get('/count/daily', visitController.getVisitStats)
+router.get('/count/weekly', visitController.getVisitStats)
+router.get('/rushhour', visitController.getVisitStats)
+router.get('/detail/:visitId', authentication, visitController.getVisitDetail)
 
 router.post('/add', authentication, authorization, visitController.createNewVisit)
 
-router.patch('/update/:id', authentication, authorization, visitController.updateVisit)
+router.put('/update/:visitId', authentication, authorization, visitController.updateVisitPut)
+router.patch('/update/:visitId', authentication, authorization, visitController.updateVisitPut)
 
-router.delete('/delete/:id', authentication, authorization, visitController.deleteVisit)
+router.delete('/delete/:visitId', authentication, authorization, visitController.deleteVisit)
 
 //follow up
 router.get('/:id/follow-up', authentication, visitController.getVisitFollowUp)

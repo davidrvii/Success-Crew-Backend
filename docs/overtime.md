@@ -6,13 +6,11 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body unless specified.
 
-## Get All Overtime (Testing/Admin)
-- Endpoint : `/overtime/admin`
+## Get All Overtime
+- Endpoint : `/overtime/all`
 - Method : `GET`
-- Auth : (for testing purposes)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -21,27 +19,54 @@ Authorization: Bearer <token>
   "overtimes": [
     {
       "overtime_id": 1,
-      "user_id": 10,
-      "attendance_id": 1,
       "overtime_desc": "Stock opname",
-      "overtime_date": "2026-01-21",
-      "overtime_start": "2026-01-21T11:00:00.000Z",
-      "overtime_end": "2026-01-21T13:00:00.000Z",
-      "overtime_status": "PENDING",
-      "created_at": "2026-01-21T03:30:27.000Z",
-      "updated_at": "2026-01-21T03:30:27.000Z"
+      "overtime_start": "2026-06-17T17:00:00.000Z",
+      "overtime_end": "2026-06-17T20:00:00.000Z",
+      "overtime_status": "PENDING"
     }
   ]
 }
 ```
 
-## Get Crew Overtime (By User)
+## Get Overtime Basic All
+- Endpoint : `/overtime/basic/all`
+- Method : `GET`
+- Response Success (output: total overtime unapproved) :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Overtime Basic All Success",
+  "overtimes": [
+    {
+      "overtime_id": 1,
+      "overtime_status": "PENDING"
+    }
+  ],
+  "total_unapproved": 1
+}
+```
+
+## Get Overtime Basic By ID
+- Endpoint : `/overtime/basic/:overtimeId`
+- Method : `GET`
+- Auth : ✅
+- Response Success (output: total overtime unapproved overall) :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Overtime Basic Success",
+  "overtimeBasic": {
+    "overtime_id": 1,
+    "overtime_status": "PENDING",
+    "total_unapproved": 1
+  }
+}
+```
+
+## Get Crew Overtime (By User) (Kept as per Rule 2)
 - Endpoint : `/overtime/crew/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -53,24 +78,21 @@ Authorization: Bearer <token>
       "user_id": 10,
       "attendance_id": 1,
       "overtime_desc": "Stock opname",
-      "overtime_date": "2026-01-21",
-      "overtime_start": "2026-01-21T11:00:00.000Z",
-      "overtime_end": "2026-01-21T13:00:00.000Z",
+      "overtime_date": "2026-06-17T00:00:00.000Z",
+      "overtime_start": "2026-06-17T17:00:00.000Z",
+      "overtime_end": "2026-06-17T20:00:00.000Z",
       "overtime_status": "PENDING",
-      "created_at": "2026-01-21T03:30:27.000Z",
-      "updated_at": "2026-01-21T03:30:27.000Z"
+      "created_at": "2026-06-17T10:00:00.000Z",
+      "updated_at": "2026-06-17T10:00:00.000Z"
     }
   ]
 }
 ```
 
-## Get Overtime Detail
+## Get Overtime Detail (Kept as per Rule 2)
 - Endpoint : `/overtime/detail/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : overtime_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -81,86 +103,51 @@ Authorization: Bearer <token>
     "user_id": 10,
     "attendance_id": 1,
     "overtime_desc": "Stock opname",
-    "overtime_date": "2026-01-21",
-    "overtime_start": "2026-01-21T11:00:00.000Z",
-    "overtime_end": "2026-01-21T13:00:00.000Z",
+    "overtime_date": "2026-06-17T00:00:00.000Z",
+    "overtime_start": "2026-06-17T17:00:00.000Z",
+    "overtime_end": "2026-06-17T20:00:00.000Z",
     "overtime_status": "PENDING",
-    "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T03:30:27.000Z"
+    "created_at": "2026-06-17T10:00:00.000Z",
+    "updated_at": "2026-06-17T10:00:00.000Z"
   }
 }
 ```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Overtime Not Found"
-}
-```
 
-## Create New Overtime
+## Add Overtime
 - Endpoint : `/overtime/add`
 - Method : `POST`
 - Auth : ✅
 - Request Body :
 ```json
 {
+  "user_id": 10,
   "attendance_id": 1,
   "overtime_desc": "Stock opname",
-  "overtime_date": "2026-01-21",
-  "overtime_start": "2026-01-21T11:00:00.000Z",
-  "overtime_end": "2026-01-21T13:00:00.000Z",
+  "overtime_start": "2026-06-17T17:00:00.000Z",
+  "overtime_end": "2026-06-17T20:00:00.000Z",
   "overtime_status": "PENDING"
 }
 ```
-- Required :
-  - `attendance_id`
-  - `overtime_desc`
-  - `overtime_date`
-  - `overtime_start`
-  - `overtime_end`
-- Notes :
-  - `overtime_status` default: `PENDING`
 - Response Success :
 ```json
 {
   "statusCode": 201,
   "message": "Create Overtime Success",
-  "newOvertime": {
-    "overtime_id": 1,
+  "overtimeCreated": {
     "user_id": 10,
     "attendance_id": 1,
     "overtime_desc": "Stock opname",
-    "overtime_date": "2026-01-21",
-    "overtime_start": "2026-01-21T11:00:00.000Z",
-    "overtime_end": "2026-01-21T13:00:00.000Z",
-    "overtime_status": "PENDING",
-    "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T03:30:27.000Z"
+    "overtime_start": "2026-06-17T17:00:00.000Z",
+    "overtime_end": "2026-06-17T20:00:00.000Z",
+    "overtime_status": "PENDING"
   }
 }
 ```
-- Response Error (Missing required field) :
-```json
-{
-  "statusCode": 400,
-  "message": "Missing Required Field"
-}
-```
-- Response Error (Overtime desc missing) :
-```json
-{
-  "statusCode": 400,
-  "message": "Overtime description is required"
-}
-```
 
-## Update Overtime Status
-- Endpoint : `/overtime/update/:id`
+## Patch Overtime Status
+- Endpoint : `/overtime/update/:overtimeId`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : overtime_id (number)
 - Request Body :
 ```json
 {
@@ -172,54 +159,49 @@ Authorization: Bearer <token>
 {
   "statusCode": 200,
   "message": "Update Overtime Status Success",
-  "updatedOvertime": {
+  "overtimeUpdated": {
     "overtime_id": 1,
-    "user_id": 10,
-    "attendance_id": 1,
-    "overtime_desc": "Stock opname",
-    "overtime_date": "2026-01-21",
-    "overtime_start": "2026-01-21T11:00:00.000Z",
-    "overtime_end": "2026-01-21T13:00:00.000Z",
-    "overtime_status": "APPROVED",
-    "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T04:30:27.000Z"
+    "overtime_status": "APPROVED"
   }
 }
 ```
-- Response Error (overtime_status missing) :
+
+## Update Overtime (PUT)
+- Endpoint : `/overtime/update/:overtimeId`
+- Method : `UPDATE`
+- Auth : ✅
+- Request Body :
 ```json
 {
-  "statusCode": 400,
-  "message": "overtime_status is required"
+  "overtime_desc": "Stock opname updated",
+  "overtime_start": "2026-06-17T17:00:00.000Z",
+  "overtime_end": "2026-06-17T21:00:00.000Z",
+  "overtime_status": "APPROVED"
 }
 ```
-- Response Error (Not found) :
+- Response Success :
 ```json
 {
-  "statusCode": 404,
-  "message": "Overtime Not Found"
+  "statusCode": 200,
+  "message": "Update Overtime Success",
+  "overtimeUpdated": {
+    "overtime_desc": "Stock opname updated",
+    "overtime_start": "2026-06-17T17:00:00.000Z",
+    "overtime_end": "2026-06-17T21:00:00.000Z",
+    "overtime_status": "APPROVED"
+  }
 }
 ```
 
 ## Delete Overtime
-- Endpoint : `/overtime/delete/:id`
+- Endpoint : `/overtime/delete/:overtimeId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : overtime_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
   "statusCode": 200,
   "message": "Delete Overtime Success",
   "overtimeId": 1
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Overtime Not Found"
 }
 ```

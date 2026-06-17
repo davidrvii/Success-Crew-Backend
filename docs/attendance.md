@@ -6,84 +6,87 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body unless specified.
 
-## Get All Attendance (Testing/Admin)
-- Endpoint : `/attendance/admin`
+## Get All Attendance
+- Endpoint : `/attendance/all`
 - Method : `GET`
-- Auth : (for testing purposes)
-- Request Body : -
 - Response Success :
 ```json
 {
   "statusCode": 200,
   "message": "Get All Attendance Success",
-  "attendances": [
+  "attendance": [
     {
       "attendance_id": 1,
-      "user_id": 10,
-      "attendance_status": "PRESENT",
-      "attendance_in": "2026-01-21T01:00:00.000Z",
-      "attendance_out": "2026-01-21T10:00:00.000Z",
-      "attendance_date": "2026-01-21",
-      "created_at": "2026-01-21T01:00:00.000Z",
-      "updated_at": "2026-01-21T10:00:00.000Z",
-      "leaves": [],
-      "overtimes": []
+      "attendance_status": "Hadir",
+      "attendance_in": "2026-06-17T08:00:00.000Z",
+      "attendance_out": "2026-06-17T17:00:00.000Z",
+      "attendance_date": "2026-06-17T00:00:00.000Z"
     }
   ]
 }
 ```
-> This endpoint includes relations: `leaves` and `overtimes`.
 
-## Get Crew Attendance (By User)
-- Endpoint : `/attendance/crew/:id`
+## Get Attendance Basic (Berdasarkan Tanggal)
+- Endpoint : `/attendance/basic`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
-- Request Body : -
+- Query Params (optional):
+  - `date`: Date string formatted as `YYYY-MM-DD` (defaults to today)
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Attendance Basic Success",
+  "attendanceBasic": {
+    "attendance_in": "2026-06-17T08:00:00.000Z",
+    "attendance_out": "2026-06-17T17:00:00.000Z"
+  }
+}
+```
+
+## Get Crew Attendance (By User)
+- Endpoint : `/attendance/crew/:userId`
+- Method : `GET`
+- Auth : ✅
 - Response Success :
 ```json
 {
   "statusCode": 200,
   "message": "Get Crew Attendance Success",
-  "crewAttendances": [
-    {
-      "attendance_id": 1,
-      "user_id": 10,
-      "attendance_status": "PRESENT",
-      "attendance_in": "2026-01-21T01:00:00.000Z",
-      "attendance_out": null,
-      "attendance_date": "2026-01-21",
-      "created_at": "2026-01-21T01:00:00.000Z",
-      "updated_at": "2026-01-21T01:00:00.000Z",
-      "leaves": [
-        {
-          "leave_id": 3,
-          "leave_desc": "Cuti Tahunan",
-          "leave_status": "PENDING"
-        }
-      ],
-      "overtimes": [
-        {
-          "overtime_id": 2,
-          "overtime_start": "2026-01-21T11:00:00.000Z",
-          "overtime_end": "2026-01-21T13:00:00.000Z"
-        }
-      ]
-    }
-  ]
+  "crewAttendanceHistory": {
+    "total_attendance": 150,
+    "total_late": 5,
+    "total_leave": 3,
+    "total_overtime": 10,
+    "attendance": [
+      {
+        "attendance_id": 1,
+        "attendance_status": "Hadir",
+        "attendance_in": "2026-06-17T08:00:00.000Z",
+        "attendance_out": "2026-06-17T17:00:00.000Z",
+        "attendance_date": "2026-06-17T00:00:00.000Z"
+      }
+    ],
+    "leave": [
+      {
+        "leave_id": 1
+      }
+    ],
+    "overtime": [
+      {
+        "overtime_id": 1
+      }
+    ]
+  }
 }
 ```
 
-## Get Attendance Detail
+## Get Attendance Detail (Kept as per Rule 2)
 - Endpoint : `/attendance/detail/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : attendance_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -92,125 +95,121 @@ Authorization: Bearer <token>
   "attendanceDetail": {
     "attendance_id": 1,
     "user_id": 10,
-    "attendance_status": "PRESENT",
-    "attendance_in": "2026-01-21T01:00:00.000Z",
-    "attendance_out": "2026-01-21T10:00:00.000Z",
-    "attendance_date": "2026-01-21",
-    "created_at": "2026-01-21T01:00:00.000Z",
-    "updated_at": "2026-01-21T10:00:00.000Z",
-    "leaves": [],
+    "attendance_status": "Hadir",
+    "attendance_in": "2026-06-17T08:00:00.000Z",
+    "attendance_out": "2026-06-17T17:00:00.000Z",
+    "attendance_date": "2026-06-17T00:00:00.000Z",
+    "created_at": "2026-06-17T08:00:00.000Z",
+    "updated_at": "2026-06-17T17:00:00.000Z",
     "overtimes": []
   }
 }
 ```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Attendance Not Found"
-}
-```
 
-## Check-in Attendance
-- Endpoint : `/attendance/check-in`
+## Add Attendance
+- Endpoint : `/attendance/add`
 - Method : `POST`
 - Auth : ✅
 - Request Body :
 ```json
 {
-  "attendance_status": "PRESENT",
-  "attendance_in": "2026-01-21T01:00:00.000Z",
-  "attendance_date": "2026-01-21"
+  "user_id": 10,
+  "attendance_date": "2026-06-17"
 }
 ```
 - Response Success :
 ```json
 {
   "statusCode": 201,
-  "message": "Create Attendance (Check-in) Success",
-  "attendanceIn": {
-    "attendance_id": 1,
+  "message": "Create Attendance Success",
+  "attendanceAdded": {
     "user_id": 10,
-    "attendance_status": "PRESENT",
-    "attendance_in": "2026-01-21T01:00:00.000Z",
-    "attendance_out": null,
-    "attendance_date": "2026-01-21",
-    "created_at": "2026-01-21T01:00:00.000Z",
-    "updated_at": "2026-01-21T01:00:00.000Z"
+    "attendance_date": "2026-06-17T00:00:00.000Z"
   }
 }
 ```
-- Response Error (Missing required field) :
-```json
-{
-  "statusCode": 400,
-  "message": "Missing Required Field"
-}
-```
-- Response Error (Already check-in today) :
-```json
-{
-  "statusCode": 409,
-  "message": "You've Already Check In Today"
-}
-```
 
-## Check-out Attendance
-- Endpoint : `/attendance/check-out/:id`
+## Patch Checkin (Berdasarkan Tanggal)
+- Endpoint : `/attendance/checkin`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : attendance_id (number)
 - Request Body :
 ```json
 {
-  "attendance_out": "2026-01-21T10:00:00.000Z"
+  "date": "2026-06-17",
+  "attendance_status": "Hadir"
 }
 ```
 - Response Success :
 ```json
 {
   "statusCode": 200,
-  "message": "Update Attendance (Check-out) Success",
-  "attendanceOut": {
-    "attendance_id": 1,
-    "user_id": 10,
-    "attendance_status": "PRESENT",
-    "attendance_in": "2026-01-21T01:00:00.000Z",
-    "attendance_out": "2026-01-21T10:00:00.000Z",
-    "attendance_date": "2026-01-21",
-    "created_at": "2026-01-21T01:00:00.000Z",
-    "updated_at": "2026-01-21T10:00:00.000Z"
+  "message": "Check-in Success",
+  "checkin": {
+    "attendance_in": "2026-06-17T08:15:00.000Z",
+    "attendance_status": "Hadir"
   }
 }
 ```
-- Response Error (Not found) :
+
+## Patch Checkout (Berdasarkan Tanggal)
+- Endpoint : `/attendance/checkout`
+- Method : `PATCH`
+- Auth : ✅
+- Request Body :
 ```json
 {
-  "statusCode": 404,
-  "message": "Attendance Not Found"
+  "date": "2026-06-17"
+}
+```
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Check-out Success",
+  "checkout": {
+    "attendance_date": "2026-06-17T00:00:00.000Z",
+    "attendance_out": "2026-06-17T17:05:00.000Z"
+  }
+}
+```
+
+## Update Attendance
+- Endpoint : `/attendance/update/:attendanceId`
+- Method : `UPDATE`
+- Auth : ✅
+- Request Body :
+```json
+{
+  "attendance_status": "Telat",
+  "attendance_in": "2026-06-17T09:15:00.000Z",
+  "attendance_out": "2026-06-17T17:00:00.000Z",
+  "attendance_date": "2026-06-17"
+}
+```
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Update Attendance Success",
+  "attendanceUpdated": {
+    "attendance_status": "Telat",
+    "attendance_in": "2026-06-17T09:15:00.000Z",
+    "attendance_out": "2026-06-17T17:00:00.000Z",
+    "attendance_date": "2026-06-17T00:00:00.000Z"
+  }
 }
 ```
 
 ## Delete Attendance
-- Endpoint : `/attendance/delete/:id`
+- Endpoint : `/attendance/delete/:attendanceId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : attendance_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
   "statusCode": 200,
   "message": "Delete Attendance Success",
   "attendanceId": 1
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Attendance Not Found"
 }
 ```

@@ -6,13 +6,11 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body unless specified.
 
-## Get All Notification (Testing/Admin)
-- Endpoint : `/notification/admin`
+## Get All Notification
+- Endpoint : `/notification/all`
 - Method : `GET`
-- Auth : (for testing purposes)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -21,24 +19,36 @@ Authorization: Bearer <token>
   "notifications": [
     {
       "notification_id": 1,
-      "user_id": 10,
       "notification_title": "Reminder",
       "notification_desc": "Jangan lupa absen",
       "is_read": false,
-      "created_at": "2026-01-21T03:30:27.000Z",
-      "updated_at": "2026-01-21T03:30:27.000Z"
+      "created_at": "2026-01-21T03:30:27.000Z"
     }
   ]
 }
 ```
 
-## Get Notification History (By User)
+## Get Notification Basic
+- Endpoint : `/notification/basic/:notificationId`
+- Method : `GET`
+- Auth : ✅
+- Response Success (output: total notification unread) :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Notification Basic Success",
+  "notificationBasic": {
+    "notification_id": 1,
+    "is_read": false,
+    "total_unread": 5
+  }
+}
+```
+
+## Get Notification History (By User) (Kept as per Rule 2)
 - Endpoint : `/notification/history/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -58,13 +68,10 @@ Authorization: Bearer <token>
 }
 ```
 
-## Get Notification Detail
+## Get Notification Detail (Kept as per Rule 2)
 - Endpoint : `/notification/detail/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : notification_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -81,13 +88,6 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Notification Not Found"
-}
-```
 
 ## Create New Notification
 - Endpoint : `/notification/add`
@@ -96,6 +96,7 @@ Authorization: Bearer <token>
 - Request Body :
 ```json
 {
+  "user_id": 10,
   "notification_title": "Reminder",
   "notification_desc": "Jangan lupa absen",
   "is_read": false
@@ -107,39 +108,40 @@ Authorization: Bearer <token>
   "statusCode": 201,
   "message": "Create Notification Success",
   "notificationCreated": {
-    "notification_id": 1,
     "user_id": 10,
     "notification_title": "Reminder",
     "notification_desc": "Jangan lupa absen",
-    "is_read": false,
-    "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T03:30:27.000Z"
+    "is_read": false
   }
 }
 ```
-- Response Error (Missing required field) :
-```json
-{
-  "statusCode": 400,
-  "message": "Missing Required Field"
-}
-```
 
-## Update Notification
-- Endpoint : `/notification/update/:id`
+## Patch Notification Read Status
+- Endpoint : `/notification/read/:id`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : notification_id (number)
-- Request Body (optional, send only fields to be updated):
+- Request Body (optional) :
 ```json
 {
-  "user_id": 10,
-  "notification_title": "Reminder Update",
-  "notification_desc": "Absen sekarang",
   "is_read": true
 }
 ```
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Read Notification Success",
+  "notificationRead": {
+    "notification_id": 1,
+    "is_read": true
+  }
+}
+```
+
+## Update Notification (PATCH) (Kept as per Rule 2)
+- Endpoint : `/notification/update/:id`
+- Method : `PATCH`
+- Auth : ✅
 - Response Success :
 ```json
 {
@@ -156,33 +158,41 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Not found) :
+
+## Update Notification (PUT)
+- Endpoint : `/notification/update/:notificationId`
+- Method : `UPDATE`
+- Auth : ✅
+- Request Body :
 ```json
 {
-  "statusCode": 404,
-  "message": "Notification Not Found"
+  "notification_title": "Reminder Update",
+  "notification_desc": "Absen sekarang",
+  "is_read": true
+}
+```
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Update Notification Success",
+  "notificationUpdated": {
+    "notification_title": "Reminder Update",
+    "notification_desc": "Absen sekarang",
+    "is_read": true
+  }
 }
 ```
 
 ## Delete Notification
-- Endpoint : `/notification/delete/:id`
+- Endpoint : `/notification/delete/:notificationId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : notification_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
   "statusCode": 200,
   "message": "Delete Notification Success",
   "notificationId": 1
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Notification Not Found"
 }
 ```

@@ -5,9 +5,47 @@ const getAllNotification = async (req, res, next) => {
     try {
         const notifications = await prisma.notification.findMany({
             orderBy: { created_at: 'desc' },
+            select: {
+                notification_id: true,
+                notification_title: true,
+                notification_desc: true,
+                is_read: true,
+                created_at: true,
+            }
         })
 
-        return response(200, {notifications: notifications}, 'Get All Notification Success', res)
+        return response(200, { notifications: notifications }, 'Get All Notification Success', res)
+    } catch (error) {
+        return next(error)
+    }
+}
+
+const getNotificationBasic = async (req, res, next) => {
+    const notificationId = Number(req.params.notificationId)
+
+    try {
+        const notif = await prisma.notification.findUnique({
+            where: { notification_id: notificationId },
+        })
+
+        if (!notif) {
+            return response(404, null, 'Notification Not Found', res)
+        }
+
+        const totalUnread = await prisma.notification.count({
+            where: {
+                user_id: notif.user_id,
+                is_read: false
+            }
+        });
+
+        const result = {
+            notification_id: notif.notification_id,
+            is_read: notif.is_read,
+            total_unread: totalUnread
+        };
+
+        return response(200, { notificationBasic: result }, 'Get Notification Basic Success', res)
     } catch (error) {
         return next(error)
     }
@@ -47,12 +85,12 @@ const getNotificationDetail = async (req, res, next) => {
 }
 
 const createNewNotification = async (req, res, next) => {
-    const {notification_title, notification_desc, is_read } = req.body
+    const { user_id, notification_title, notification_desc, is_read } = req.body
 
     try {
-        const userId = Number(req.userData?.user_id);
-        if (!userId) {
-            return response(401, null, "Unauthorized", res);
+        const targetUserId = Number(user_id) || Number(req.userData?.user_id);
+        if (!targetUserId) {
+            return response(401, null, "Unauthorized or Missing User ID", res);
         }
 
         if (!notification_title || !notification_desc) {
@@ -60,16 +98,53 @@ const createNewNotification = async (req, res, next) => {
         }
 
         const data = {
-            user_id: userId,
+            user_id: targetUserId,
             notification_title,
             notification_desc,
-            is_read: typeof is_read === 'boolean' ? is_read : false,
+            is_read: typeof is_read === 'boolean' ? is_read : (is_read === 'true' || is_read === true),
         }
 
         const created = await prisma.notification.create({ data })
 
-        return response(
-            201, {notificationCreated: created}, 'Create Notification Success', res)
+        const result = {
+            user_id: created.user_id,
+            notification_title: created.notification_title,
+            notification_desc: created.notification_desc,
+            is_read: created.is_read
+        }
+
+        return response(201, { notificationCreated: result }, 'Create Notification Success', res)
+    } catch (error) {
+        return next(error)
+    }
+}
+
+const readNotification = async (req, res, next) => {
+    const id = Number(req.params.id)
+    const { is_read } = req.body
+
+    try {
+        const existing = await prisma.notification.findUnique({
+            where: { notification_id: id },
+        })
+
+        if (!existing) {
+            return response(404, null, 'Notification Not Found', res)
+        }
+
+        const updated = await prisma.notification.update({
+            where: { notification_id: id },
+            data: {
+                is_read: typeof is_read === 'boolean' ? is_read : true
+            }
+        })
+
+        const result = {
+            notification_id: updated.notification_id,
+            is_read: updated.is_read
+        }
+
+        return response(200, { notificationRead: result }, 'Read Notification Success', res)
     } catch (error) {
         return next(error)
     }
@@ -106,8 +181,43 @@ const updateNotification = async (req, res, next) => {
     }
 }
 
+const updateNotificationPut = async (req, res, next) => {
+    const notificationId = Number(req.params.notificationId)
+    const { notification_title, notification_desc, is_read } = req.body
+
+    try {
+        const existing = await prisma.notification.findUnique({
+            where: { notification_id: notificationId },
+        })
+
+        if (!existing) {
+            return response(404, null, 'Notification Not Found', res)
+        }
+
+        const data = {}
+        if (notification_title !== undefined) data.notification_title = notification_title
+        if (notification_desc !== undefined) data.notification_desc = notification_desc
+        if (is_read !== undefined) data.is_read = typeof is_read === 'boolean' ? is_read : (is_read === 'true' || is_read === true)
+
+        const updated = await prisma.notification.update({
+            where: { notification_id: notificationId },
+            data,
+        })
+
+        const result = {
+            notification_title: updated.notification_title,
+            notification_desc: updated.notification_desc,
+            is_read: updated.is_read
+        }
+
+        return response(200, { notificationUpdated: result }, 'Update Notification Success', res)
+    } catch (error) {
+        return next(error)
+    }
+}
+
 const deleteNotification = async (req, res, next) => {
-    const id = Number(req.params.id)
+    const id = Number(req.params.notificationId)
 
     try {
         const existing = await prisma.notification.findUnique({
@@ -131,9 +241,12 @@ const deleteNotification = async (req, res, next) => {
 
 module.exports = {
     getAllNotification,
+    getNotificationBasic,
     getHistoryNotification,
     getNotificationDetail,
     createNewNotification,
+    readNotification,
     updateNotification,
+    updateNotificationPut,
     deleteNotification,
 }

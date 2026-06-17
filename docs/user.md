@@ -48,13 +48,6 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Email already registered) :
-```json
-{
-  "statusCode": 400,
-  "message": "Email Already Registered"
-}
-```
 
 ## Login User
 - Endpoint : `/user/login`
@@ -83,20 +76,10 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Invalid credential) :
-```json
-{
-  "statusCode": 401,
-  "message": "Invalid Email or Password",
-  "loginResult": null
-}
-```
 
-## Get All Users (Testing/Admin)
-- Endpoint : `/user/admin`
+## Get All Users
+- Endpoint : `/user/all`
 - Method : `GET`
-- Auth : (for testing purposes)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -105,65 +88,47 @@ Authorization: Bearer <token>
   "users": [
     {
       "user_id": 10,
-      "user_name": "Budi",
-      "user_email": "budi@mail.com",
       "user_photo": null,
+      "user_name": "Budi",
+      "crew_status": "ACTIVE",
+      "contract_status": "KONTRAK",
+      "user_email": "budi@mail.com",
+      "user_phone": "081234567890",
+      "user_birth": "1995-10-24T00:00:00.000Z",
+      "start_work": "2026-01-01T00:00:00.000Z",
+      "end_work": null,
       "role_name": "Sales",
-      "office_name": "Office A",
-      "created_at": "2026-01-21T03:30:27.000Z",
-      "updated_at": "2026-01-21T03:30:27.000Z"
+      "role_division": "Sales Division",
+      "office_name": "Office A"
     }
   ]
 }
 ```
 
-## Get User Detail
-- Endpoint : `/user/detail/:id`
+## Get All Crews
+- Endpoint : `/user/crew/all`
 - Method : `GET`
-- Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
   "statusCode": 200,
-  "message": "Get User Detail Success",
-  "userDetail": {
-    "user_id": 10,
-    "office_id": 1,
-    "role_id": 3,
-    "user_name": "Budi",
-    "user_email": "budi@mail.com",
-    "user_photo": null,
-    "user_phone": "081234567890",
-    "user_birth": "1995-10-24T00:00:00.000Z",
-    "start_work": "2026-01-01T00:00:00.000Z",
-    "end_work": null,
-    "crew_status": "ACTIVE",
-    "contract_status": "KONTRAK",
-    "role_name": "Sales",
-    "office_name": "Office A",
-    "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T03:30:27.000Z"
-  }
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "User Not Found"
+  "message": "Get All Crews Success",
+  "crew": [
+    {
+      "user_id": 10,
+      "user_photo": null,
+      "user_name": "Budi",
+      "role_name": "Sales",
+      "office_name": "Office A"
+    }
+  ]
 }
 ```
 
 ## Get User Basic
-- Endpoint : `/user/basic/:id`
+- Endpoint : `/user/basic/:userId`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -172,39 +137,169 @@ Authorization: Bearer <token>
   "userBasic": {
     "user_id": 10,
     "user_name": "Budi",
-    "user_photo": null,
-    "role_name": "Sales"
+    "role_name": "Sales",
+    "attedance_in": "2026-06-17T09:15:00.000Z"
   }
 }
 ```
-- Response Error (Not found) :
+
+## Get Crew Detail
+- Endpoint : `/user/crew/:userId`
+- Method : `GET`
+- Auth : ✅
+- Response Success :
 ```json
 {
-  "statusCode": 404,
-  "message": "User Not Found"
+  "statusCode": 200,
+  "message": "Get Crew User Detail Success",
+  "userCrew": {
+    "user_id": 10,
+    "user_photo": null,
+    "user_name": "Budi",
+    "role_name": "Sales",
+    "crew_status": "ACTIVE",
+    "contract_status": "KONTRAK",
+    "user_email": "budi@mail.com",
+    "user_phone": "081234567890",
+    "user_birth": "1995-10-24T00:00:00.000Z",
+    "start_work": "2026-01-01T00:00:00.000Z",
+    "end_work": null,
+    "role_division": "Sales Division",
+    "office_name": "Office A",
+    "total_attendance": 150,
+    "total_late": 10,
+    "total_leave": 5,
+    "total_overtime": 20,
+    "attendance": [
+      {
+        "attendance_id": 1,
+        "attendance_status": "Hadir",
+        "attendance_in": "2026-06-17T08:00:00.000Z",
+        "attendance_out": "2026-06-17T17:00:00.000Z",
+        "attendance_date": "2026-06-17T00:00:00.000Z"
+      }
+    ],
+    "leave": [
+      {
+        "leave_id": 1
+      }
+    ],
+    "overtime": [
+      {
+        "overtime_id": 1
+      }
+    ]
+  }
 }
 ```
 
-## Update User
-- Endpoint : `/user/update/:id`
+## Get User Detail
+- Endpoint : `/user/detail/:userId`
+- Method : `GET`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Get User Detail Success",
+  "userDetail": {
+    "user_id": 10,
+    "user_photo": null,
+    "user_name": "Budi",
+    "crew_status": "ACTIVE",
+    "contract_status": "KONTRAK",
+    "user_email": "budi@mail.com",
+    "user_phone": "081234567890",
+    "user_birth": "1995-10-24T00:00:00.000Z",
+    "start_work": "2026-01-01T00:00:00.000Z",
+    "end_work": null,
+    "role_name": "Sales",
+    "role_division": "Sales Division",
+    "office_name": "Office A"
+  }
+}
+```
+
+## Add Crew
+- Endpoint : `/user/crew/add`
+- Method : `POST`
+- Auth : ✅
+- Request Body :
+```json
+{
+  "user_name": "Ahmad",
+  "crew_status": "ACTIVE",
+  "contract_status": "KONTRAK",
+  "user_email": "ahmad@mail.com",
+  "user_phone": "081234567891",
+  "user_birth": "1996-11-25",
+  "start_work": "2026-02-01",
+  "end_work": null,
+  "role_name": "Crew",
+  "role_division": "General",
+  "office_name": "Main Office"
+}
+```
+- Response Success :
+```json
+{
+  "statusCode": 201,
+  "message": "Add Crew Success",
+  "crewAdded": {
+    "user_id": 11,
+    "user_name": "Ahmad",
+    "crew_status": "ACTIVE",
+    "contract_status": "KONTRAK",
+    "user_email": "ahmad@mail.com",
+    "user_phone": "081234567891",
+    "user_birth": "1996-11-25T00:00:00.000Z",
+    "start_work": "2026-02-01T00:00:00.000Z",
+    "end_work": null,
+    "role_name": "Crew",
+    "role_division": "General",
+    "office_name": "Main Office"
+  }
+}
+```
+
+## Update Crew User
+- Endpoint : `/user/crew/update/:userId`
+- Method : `PATCH`
+- Auth : ✅
+- Request Body :
+```json
+{
+  "user_name": "Ahmad Updated",
+  "crew_status": "INACTIVE"
+}
+```
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Update Crew Success",
+  "crewUpdated": {
+    "user_id": 11,
+    "user_name": "Ahmad Updated",
+    "crew_status": "INACTIVE",
+    "contract_status": "KONTRAK",
+    "user_email": "ahmad@mail.com",
+    "user_phone": "081234567891",
+    "user_birth": "1996-11-25T00:00:00.000Z",
+    "start_work": "2026-02-01T00:00:00.000Z",
+    "end_work": null,
+    "role_name": "Crew",
+    "role_division": "General",
+    "office_name": "Main Office"
+  }
+}
+```
+
+## Update User details (PATCH)
+- Endpoint : `/user/update/:userId`
 - Method : `PATCH`
 - Auth : ✅
 - Content-Type : `multipart/form-data`
-- Request Params :
-  - `id` : user_id (number)
-- Form Data (optional, send only fields to be updated):
-  - `office_id` (number)
-  - `role_id` (number)
-  - `user_name` (string)
-  - `user_email` (string)
-  - `user_password` (string) → will be hashed
-  - `user_phone` (string)
-  - `user_birth` (string/date, format: YYYY-MM-DD)
-  - `start_work` (string/date, format: YYYY-MM-DD)
-  - `end_work` (string/date, format: YYYY-MM-DD)
-  - `crew_status` (string)
-  - `contract_status` (string)
-  - `user_image` (file) → uploaded to server, path stored in user_photo column (VARCHAR)
 - Response Success :
 ```json
 {
@@ -212,50 +307,49 @@ Authorization: Bearer <token>
   "message": "Update User Success",
   "user": {
     "user_id": 10,
-    "office_id": 1,
-    "role_id": 3,
+    "user_photo": "/uploads/images/filename.jpg",
     "user_name": "Budi Update",
     "user_email": "budi@mail.com",
-    "user_photo": "/uploads/images/filename.jpg",
     "user_phone": "081234567890",
-    "user_birth": "1995-10-24T00:00:00.000Z",
-    "start_work": "2026-01-01T00:00:00.000Z",
-    "end_work": null,
-    "crew_status": "ACTIVE",
-    "contract_status": "KONTRAK",
-    "role_name": "Sales",
-    "office_name": "Office A",
-    "updated_at": "2026-01-21T04:30:27.000Z"
+    "user_birth": "1995-10-24T00:00:00.000Z"
   }
 }
 ```
-- Response Error (Not found) :
+
+## Update User details (PUT)
+- Endpoint : `/user/update/:userId`
+- Method : `UPDATE`
+- Auth : ✅
+- Content-Type : `multipart/form-data`
+- Response Success :
 ```json
 {
-  "statusCode": 404,
-  "message": "User Not Found"
+  "statusCode": 200,
+  "message": "Update User (PUT) Success",
+  "user": {
+    "user_id": 10,
+    "user_photo": "/uploads/images/filename.jpg",
+    "user_name": "Budi Update",
+    "crew_status": "ACTIVE",
+    "contract_status": "KONTRAK",
+    "user_email": "budi@mail.com",
+    "user_phone": "081234567890",
+    "user_birth": "1995-10-24T00:00:00.000Z",
+    "start_work": "2026-01-01T00:00:00.000Z",
+    "end_work": null
+  }
 }
 ```
 
 ## Delete User
-- Endpoint : `/user/delete/:id`
+- Endpoint : `/user/delete/:userId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
   "statusCode": 200,
   "message": "DELETE User Success",
   "userId": 10
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "User Not Found"
 }
 ```

@@ -6,13 +6,11 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body unless specified.
 
-## Visit - Get All Visit (Testing/Admin)
-- Endpoint : `/visit/admin`
+## Visit - Get All Visit
+- Endpoint : `/visit/all`
 - Method : `GET`
-- Auth : (for testing purposes)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -20,31 +18,137 @@ Authorization: Bearer <token>
   "message": "Get All Visit Success",
   "visits": [
     {
-      "visit_id": 1,
-      "visitor_interest": "Laptop gaming",
-      "visitor_status": "NEW",
-      "visit_type": "WALK_IN",
-      "visit_desc": "Ingin lihat stok dan promo",
-      "visit_sales": "Sales notes / name",
-      "user_id": 10,
-      "created_at": "2026-01-21T03:30:27.000Z",
       "visitor_name": "John Doe",
       "visitor_phone": "08123456789",
+      "visitory_category": "VIP",
       "visitor_company": "Perusahaan A",
-      "visitor_category": "VIP"
+      "visit_type": "WALK_IN",
+      "created_at": "2026-06-17T03:30:27.000Z",
+      "interest": "Laptop gaming",
+      "visit_status": "NEW",
+      "visit_desc": "Ingin lihat stok dan promo",
+      "visit_sales": "Sales notes / name",
+      "user_id": 10
     }
   ]
 }
 ```
-> This endpoint includes relations: `follow_up`, `product_sold`, and `unit_serviced`.
+
+## Visit - Get Visit List
+- Endpoint : `/visit/list`
+- Method : `GET`
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Visit List Success",
+  "visitList": [
+    {
+      "visit_id": 1,
+      "visitor_name": "John Doe",
+      "visitor_interest": "Laptop gaming",
+      "visit_type": "WALK_IN",
+      "visitor_category": "VIP",
+      "visit_status": "NEW",
+      "created_at": "2026-06-17T03:30:27.000Z"
+    }
+  ]
+}
+```
+
+## Visit - Get Visit Statistics
+- Endpoint : `/visit/stats` (Aliases: `/visit/count/daily`, `/visit/count/weekly`, `/visit/rushhour`)
+- Method : `GET`
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Visit Stats Success",
+  "dailyCount": {
+    "total_visit": 25,
+    "call_in": 5,
+    "chat_in": 10,
+    "walk_in": 10,
+    "total_unit_service": 8,
+    "total_product_sold": 15
+  },
+  "weeklyCount": [
+    {
+      "date": "2026-06-11",
+      "total_visit": 12
+    },
+    {
+      "date": "2026-06-12",
+      "total_visit": 15
+    },
+    {
+      "date": "2026-06-13",
+      "total_visit": 8
+    },
+    {
+      "date": "2026-06-14",
+      "total_visit": 20
+    },
+    {
+      "date": "2026-06-15",
+      "total_visit": 14
+    },
+    {
+      "date": "2026-06-16",
+      "total_visit": 18
+    },
+    {
+      "date": "2026-06-17",
+      "total_visit": 25
+    }
+  ],
+  "rushHour": [
+    {
+      "hour": "09:00",
+      "total_visit": 5
+    },
+    {
+      "hour": "10:00",
+      "total_visit": 8
+    },
+    {
+      "hour": "11:00",
+      "total_visit": 12
+    },
+    {
+      "hour": "12:00",
+      "total_visit": 4
+    },
+    {
+      "hour": "13:00",
+      "total_visit": 6
+    },
+    {
+      "hour": "14:00",
+      "total_visit": 10
+    },
+    {
+      "hour": "15:00",
+      "total_visit": 15
+    },
+    {
+      "hour": "16:00",
+      "total_visit": 9
+    },
+    {
+      "hour": "17:00",
+      "total_visit": 7
+    }
+  ]
+}
+```
 
 ## Visit - Get Visit Detail
-- Endpoint : `/visit/detail/:id`
+- Endpoint : `/visit/detail/:visitId`
 - Method : `GET`
 - Auth : ✅
 - Request Params :
-  - `id` : visit_id (number)
-- Request Body : -
+  - `visitId` : visit_id (number)
 - Response Success :
 ```json
 {
@@ -52,29 +156,48 @@ Authorization: Bearer <token>
   "message": "Get Visit Detail Success",
   "visit": {
     "visit_id": 1,
-    "visitor_interest": "Laptop gaming",
-    "visitor_status": "Follow Up",
-    "visit_type": "WALK_IN",
-    "visit_desc": "Ingin lihat stok dan promo",
-    "visit_sales": "Sales notes / name",
-    "user_id": 10,
-    "created_at": "2026-01-21T03:30:27.000Z",
+    "visitor_id": 5,
     "visitor_name": "John Doe",
     "visitor_phone": "08123456789",
-    "visitor_company": "Perusahaan A",
     "visitor_category": "VIP",
-    "sales_name": "Sales A", 
-    "follow_up": [],
-    "product_sold": [],
-    "unit_serviced": []
+    "visitor_company": "Perusahaan A",
+    "visit_type": "WALK_IN",
+    "created_at": "2026-06-17T03:30:27.000Z",
+    "visit_interest": "Laptop gaming",
+    "visit_status": "Follow Up",
+    "visit_desc": "Ingin lihat stok dan promo",
+    "user_name": "Sales A",
+    "Follow UP": [
+      {
+        "follow_up_id": 1,
+        "follow_up_status": "CONTACTED",
+        "follow_up_action": "WA customer untuk penawaran",
+        "created_at": "2026-06-17T03:30:27.000Z"
+      }
+    ],
+    "Product Sold": [
+      {
+        "product_sold_id": 1,
+        "product_sold_name": "Laptop",
+        "product_sold_quantity": 1,
+        "product_sold_total": 15000000,
+        "product_sold_desc": "Gaming",
+        "created_at": "2026-06-17T03:30:27.000Z"
+      }
+    ],
+    "Unit Serviced": [
+      {
+        "unit_serviced_id": 1,
+        "unit_serviced_name": "Laptop",
+        "unit_serviced_issue": "keyboard rusak",
+        "unit_serviced_action": "ganti keyboard",
+        "unit_serviced_status": "SELESAI",
+        "unit_serviced_id_desc": "Cleaning",
+        "unit_serviced_desc": "Cleaning",
+        "created_at": "2026-06-17T03:30:27.000Z"
+      }
+    ]
   }
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Visit Not Found"
 }
 ```
 
@@ -85,63 +208,57 @@ Authorization: Bearer <token>
 - Request Body :
 ```json
 {
-  "visitor_interest": "Laptop gaming",
-  "visitor_status": "NEW",
-  "visit_type": "WALK_IN",
   "visitor_name": "John Doe",
   "visitor_phone": "08123456789",
+  "visitory_category": "VIP",
   "visitor_company": "Perusahaan A",
-  "visitor_category": "VIP",
+  "visit_type": "WALK_IN",
+  "created_at": "2026-06-17T03:30:27.000Z",
+  "interest": "Laptop gaming",
+  "visit_status": "NEW",
   "visit_desc": "Mau tanya promo dan cicilan",
-  "user_id": 10,
-  "visit_sales": "Sales notes / name"
+  "visit_sales": "Sales notes / name",
+  "user_id": 10
 }
 ```
-- Required :
-  - `visitor_interest`
-  - `visitor_status`
-  - `visit_type`
 - Response Success :
 ```json
 {
   "statusCode": 201,
   "message": "Create Visit Success",
-  "visit": {
+  "visitCreated": {
     "visit_id": 1,
     "visitor_id": 5,
     "user_id": 10,
     "visitor_interest": "Laptop gaming",
-    "visitor_status": "NEW",
+    "visit_status": "NEW",
     "visit_type": "WALK_IN",
     "visit_desc": "Mau tanya promo dan cicilan",
     "visit_sales": "Sales notes / name",
-    "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T03:30:27.000Z"
+    "created_at": "2026-06-17T03:30:27.000Z",
+    "updated_at": "2026-06-17T03:30:27.000Z"
   }
 }
 ```
-- Response Error (Missing required field) :
-```json
-{
-  "statusCode": 400,
-  "message": "Missing Required Field"
-}
-```
 
-## Visit - Update Visit
-- Endpoint : `/visit/update/:id`
-- Method : `PATCH`
+## Visit - Update Visit (PUT)
+- Endpoint : `/visit/update/:visitId`
+- Method : `UPDATE`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-- Request Body (optional, send only fields to be updated):
+- Request Body :
 ```json
 {
-  "visitor_id": 5,
-  "user_id": 10,
-  "visit_sales": "Sales notes update",
-  "visitor_interest": "Laptop untuk kerja",
-  "visitor_status": "FOLLOW_UP"
+  "visitor_name": "John Doe Updated",
+  "visitor_phone": "08123456789",
+  "visitory_category": "VIP",
+  "visitor_company": "Perusahaan A",
+  "visit_type": "WALK_IN",
+  "created_at": "2026-06-17T03:30:27.000Z",
+  "interest": "Laptop gaming",
+  "visit_status": "Follow Up",
+  "visit_desc": "Mau tanya promo dan cicilan",
+  "visit_sales": "Sales notes / name",
+  "user_id": 10
 }
 ```
 - Response Success :
@@ -149,35 +266,25 @@ Authorization: Bearer <token>
 {
   "statusCode": 200,
   "message": "Update Visit Success",
-  "visit": {
+  "visitUpdated": {
     "visit_id": 1,
     "visitor_id": 5,
     "user_id": 10,
-    "visitor_interest": "Laptop untuk kerja",
-    "visitor_status": "FOLLOW_UP",
-    "visit_type": "APPOINTMENT",
+    "visitor_interest": "Laptop gaming",
+    "visit_status": "Follow Up",
+    "visit_type": "WALK_IN",
     "visit_desc": "Mau tanya promo dan cicilan",
-    "visit_sales": "Sales notes update",
-    "created_at": "2026-01-21T03:30:27.000Z",
-    "updated_at": "2026-01-21T04:30:27.000Z"
+    "visit_sales": "Sales notes / name",
+    "created_at": "2026-06-17T03:30:27.000Z",
+    "updated_at": "2026-06-17T04:30:27.000Z"
   }
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Visit Not Found"
 }
 ```
 
 ## Visit - Delete Visit
-- Endpoint : `/visit/delete/:id`
+- Endpoint : `/visit/delete/:visitId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -186,26 +293,15 @@ Authorization: Bearer <token>
   "visitId": 1
 }
 ```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Visit Not Found"
-}
-```
-> Deleting a visit will also delete child data (`follow_up`, `product_sold`, `unit_serviced`) using a database transaction.
 
 ---
 
-# FOLLOW UP (Nested in Visit)
+# FOLLOW UP (Nested in Visit) (Kept as per Rule 2)
 
 ## Get Visit Follow Up
 - Endpoint : `/visit/:id/follow-up`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -228,8 +324,6 @@ Authorization: Bearer <token>
 - Endpoint : `/visit/:id/follow-up`
 - Method : `POST`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
 - Request Body :
 ```json
 {
@@ -252,28 +346,11 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Visit not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Visit Not Found"
-}
-```
 
 ## Update Visit Follow Up
 - Endpoint : `/visit/:id/follow-up/:followUpId`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-  - `followUpId` : follow_up_id (number)
-- Request Body (optional, send only fields to be updated):
-```json
-{
-  "follow_up_status": "DONE",
-  "follow_up_action": "Customer sudah datang ke toko"
-}
-```
 - Response Success :
 ```json
 {
@@ -289,22 +366,11 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Follow Up Not Found"
-}
-```
 
 ## Delete Visit Follow Up
 - Endpoint : `/visit/:id/follow-up/:followUpId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-  - `followUpId` : follow_up_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -315,15 +381,12 @@ Authorization: Bearer <token>
 
 ---
 
-# PRODUCT SOLD (Nested in Visit)
+# PRODUCT SOLD (Nested in Visit) (Kept as per Rule 2)
 
 ## Get Visit Products Sold
 - Endpoint : `/visit/:id/products-sold`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -335,7 +398,7 @@ Authorization: Bearer <token>
       "visit_id": 1,
       "product_sold_name": "Laptop",
       "product_sold_quantity": 1,
-      "product_sold_total": 15000000.00,
+      "product_sold_total": 15000000,
       "product_sold_desc": "Gaming",
       "created_at": "2026-01-21T03:30:27.000Z",
       "updated_at": "2026-01-21T03:30:27.000Z"
@@ -348,17 +411,6 @@ Authorization: Bearer <token>
 - Endpoint : `/visit/:id/products-sold`
 - Method : `POST`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-- Request Body :
-```json
-{
-  "product_sold_name": "Laptop",
-  "product_sold_quantity": 1,
-  "product_sold_total": 15000000.00,
-  "product_sold_desc": "Gaming"
-}
-```
 - Response Success :
 ```json
 {
@@ -369,18 +421,11 @@ Authorization: Bearer <token>
     "visit_id": 1,
     "product_sold_name": "Laptop",
     "product_sold_quantity": 1,
-    "product_sold_total": 15000000.00,
+    "product_sold_total": 15000000,
     "product_sold_desc": "Gaming",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T03:30:27.000Z"
   }
-}
-```
-- Response Error (Visit not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Visit Not Found"
 }
 ```
 
@@ -388,17 +433,6 @@ Authorization: Bearer <token>
 - Endpoint : `/visit/:id/products-sold/:productSoldId`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-  - `productSoldId` : product_sold_id (number)
-- Request Body (optional):
-```json
-{
-  "product_sold_name": "PC",
-  "product_sold_desc": "Office",
-  "product_sold_total": 12000000.00
-}
-```
 - Response Success :
 ```json
 {
@@ -409,18 +443,11 @@ Authorization: Bearer <token>
     "visit_id": 1,
     "product_sold_name": "PC",
     "product_sold_quantity": 1,
-    "product_sold_total": 12000000.00,
+    "product_sold_total": 12000000,
     "product_sold_desc": "Office",
     "created_at": "2026-01-21T03:30:27.000Z",
     "updated_at": "2026-01-21T04:30:27.000Z"
   }
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Product Sold Not Found"
 }
 ```
 
@@ -428,10 +455,6 @@ Authorization: Bearer <token>
 - Endpoint : `/visit/:id/products-sold/:productSoldId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-  - `productSoldId` : product_sold_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -440,25 +463,15 @@ Authorization: Bearer <token>
   "productSoldId": 1
 }
 ```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Product Sold Not Found"
-}
-```
 
 ---
 
-# UNIT SERVICED (Nested in Visit)
+# UNIT SERVICED (Nested in Visit) (Kept as per Rule 2)
 
 ## Get Visit Units Serviced
 - Endpoint : `/visit/:id/units-serviced`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -484,18 +497,6 @@ Authorization: Bearer <token>
 - Endpoint : `/visit/:id/units-serviced`
 - Method : `POST`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-- Request Body :
-```json
-{
-  "unit_serviced_name": "Laptop",
-  "unit_serviced_issue": "keyboard rusak",
-  "unit_serviced_action": "ganti keyboard",
-  "unit_serviced_status": "SELESAI",
-  "unit_serviced_desc": "Cleaning"
-}
-```
 - Response Success :
 ```json
 {
@@ -514,28 +515,11 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Visit not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Visit Not Found"
-}
-```
 
 ## Update Visit Unit Serviced
 - Endpoint : `/visit/:id/units-serviced/:unitServicedId`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-  - `unitServicedId` : unit_serviced_id (number)
-- Request Body (optional):
-```json
-{
-  "unit_serviced_name": "Laptop",
-  "unit_serviced_desc": "Install OS"
-}
-```
 - Response Success :
 ```json
 {
@@ -554,34 +538,16 @@ Authorization: Bearer <token>
   }
 }
 ```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Unit Serviced Not Found"
-}
-```
 
 ## Delete Visit Unit Serviced
 - Endpoint : `/visit/:id/units-serviced/:unitServicedId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : visit_id (number)
-  - `unitServicedId` : unit_serviced_id (number)
-- Request Body : -
 - Response Success :
 ```json
 {
   "statusCode": 200,
   "message": "Delete Unit Serviced Success",
   "unitServicedId": 1
-}
-```
-- Response Error (Not found) :
-```json
-{
-  "statusCode": 404,
-  "message": "Unit Serviced Not Found"
 }
 ```

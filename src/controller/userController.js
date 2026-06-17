@@ -8,9 +8,59 @@ const getAllUser = async (req, res, next) => {
         const users = await prisma.user.findMany({
             select: {
                 user_id: true,
-                user_name: true,
-                user_email: true,
                 user_photo: true,
+                user_name: true,
+                crew_status: true,
+                contract_status: true,
+                user_email: true,
+                user_phone: true,
+                user_birth: true,
+                start_work: true,
+                end_work: true,
+                role: {
+                    select: {
+                        role_name: true,
+                        role_division: true,
+                    },
+                },
+                office: {
+                    select: {
+                        office_name: true,
+                    },
+                },
+            },
+            orderBy: { created_at: 'desc' },
+        });
+
+        const result = users.map((u) => ({
+            user_id: u.user_id,
+            user_photo: u.user_photo,
+            user_name: u.user_name,
+            crew_status: u.crew_status,
+            contract_status: u.contract_status,
+            user_email: u.user_email,
+            user_phone: u.user_phone,
+            user_birth: u.user_birth,
+            start_work: u.start_work,
+            end_work: u.end_work,
+            role_name: u.role?.role_name ?? null,
+            role_division: u.role?.role_division ?? null,
+            office_name: u.office?.office_name ?? null,
+        }));
+
+        return response(200, { users: result }, 'Get All Users Success', res)
+    } catch (error) {
+        return next(error)
+    }
+}
+
+const getAllCrew = async (req, res, next) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                user_id: true,
+                user_photo: true,
+                user_name: true,
                 role: {
                     select: {
                         role_name: true,
@@ -21,51 +71,211 @@ const getAllUser = async (req, res, next) => {
                         office_name: true,
                     },
                 },
-                created_at: true,
-                updated_at: true
             },
-            orderBy: {created_at: 'desc'},
+            orderBy: { created_at: 'desc' },
         });
 
         const result = users.map((u) => ({
             user_id: u.user_id,
-            user_name: u.user_name,
-            user_email: u.user_email,
             user_photo: u.user_photo,
+            user_name: u.user_name,
             role_name: u.role?.role_name ?? null,
             office_name: u.office?.office_name ?? null,
-            created_at: u.created_at,
-            updated_at: u.updated_at,
         }));
 
-        return response(200, {users: result}, 'Get All Users Success', res)
-    } catch(error) {
+        return response(200, { crew: result }, 'Get All Crews Success', res)
+    } catch (error) {
+        return next(error)
+    }
+}
+
+const getUserBasic = async (req, res, next) => {
+    const id = Number(req.params.userId)
+
+    try {
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const todayDate = new Date(todayStr);
+
+        const user = await prisma.user.findUnique({
+            where: { user_id: id },
+            select: {
+                user_id: true,
+                user_name: true,
+                role: {
+                    select: {
+                        role_name: true,
+                    },
+                },
+                attendance: {
+                    where: {
+                        attendance_date: todayDate,
+                    },
+                    select: {
+                        attendance_in: true,
+                    },
+                },
+            },
+        })
+
+        if (!user) {
+            return response(404, null, 'User Not Found', res)
+        }
+
+        const checkInTime = user.attendance[0]?.attendance_in ?? null;
+
+        const result = {
+            user_id: user.user_id,
+            user_name: user.user_name,
+            role_name: user.role?.role_name ?? null,
+            attedance_in: checkInTime,
+            attendance_in: checkInTime,
+        }
+
+        return response(200, { userBasic: result }, 'Get User Basic Success', res)
+    } catch (error) {
+        return next(error)
+    }
+}
+
+const getCrewUserDetail = async (req, res, next) => {
+    const userId = Number(req.params.userId)
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { user_id: userId },
+            select: {
+                user_id: true,
+                user_photo: true,
+                user_name: true,
+                crew_status: true,
+                contract_status: true,
+                user_email: true,
+                user_phone: true,
+                user_birth: true,
+                start_work: true,
+                end_work: true,
+                role: {
+                    select: {
+                        role_name: true,
+                        role_division: true,
+                    },
+                },
+                office: {
+                    select: {
+                        office_name: true,
+                    },
+                },
+                attendance: {
+                    select: {
+                        attendance_id: true,
+                        attendance_status: true,
+                        attendance_in: true,
+                        attendance_out: true,
+                        attendance_date: true,
+                    },
+                    orderBy: { attendance_date: 'desc' },
+                },
+                leave: {
+                    select: {
+                        leave_id: true,
+                        leave_date: true,
+                    },
+                    orderBy: { leave_date: 'desc' },
+                },
+                overtime: {
+                    select: {
+                        overtime_id: true,
+                        overtime_start: true,
+                    },
+                    orderBy: { overtime_start: 'desc' },
+                },
+            },
+        })
+
+        if (!user) {
+            return response(404, null, 'User Not Found', res)
+        }
+
+        const currentYear = new Date().getFullYear();
+
+        const attendancesThisYear = user.attendance.filter(a => {
+            const date = new Date(a.attendance_date);
+            return date.getFullYear() === currentYear;
+        });
+
+        const leavesThisYear = user.leave.filter(l => {
+            const date = new Date(l.leave_date);
+            return date.getFullYear() === currentYear;
+        });
+
+        const overtimesThisYear = user.overtime.filter(o => {
+            const date = new Date(o.overtime_start);
+            return date.getFullYear() === currentYear;
+        });
+
+        const total_attendance = attendancesThisYear.filter(a => {
+            const status = (a.attendance_status || '').toLowerCase();
+            return status === 'hadir' || status === 'telat';
+        }).length;
+
+        const total_late = attendancesThisYear.filter(a => {
+            const status = (a.attendance_status || '').toLowerCase();
+            return status === 'telat';
+        }).length;
+
+        const total_leave = leavesThisYear.length;
+        const total_overtime = overtimesThisYear.length;
+
+        const result = {
+            user_id: user.user_id,
+            user_photo: user.user_photo,
+            user_name: user.user_name,
+            role_name: user.role?.role_name ?? null,
+            crew_status: user.crew_status,
+            contract_status: user.contract_status,
+            user_email: user.user_email,
+            user_phone: user.user_phone,
+            user_birth: user.user_birth,
+            start_work: user.start_work,
+            end_work: user.end_work,
+            role_division: user.role?.role_division ?? null,
+            office_name: user.office?.office_name ?? null,
+            total_attendance,
+            total_late,
+            total_leave,
+            total_overtime,
+            attendance: user.attendance,
+            leave: user.leave.map(l => ({ leave_id: l.leave_id })),
+            overtime: user.overtime.map(o => ({ overtime_id: o.overtime_id })),
+        };
+
+        return response(200, { userCrew: result }, 'Get Crew User Detail Success', res)
+    } catch (error) {
         return next(error)
     }
 }
 
 const getUserDetail = async (req, res, next) => {
-    const id = Number(req.params.id)
+    const id = Number(req.params.userId)
 
     try {
         const user = await prisma.user.findUnique({
             where: { user_id: id },
             select: {
                 user_id: true,
-                office_id: true,
-                role_id: true,
-                user_name: true,
-                user_email: true,
                 user_photo: true,
+                user_name: true,
+                crew_status: true,
+                contract_status: true,
+                user_email: true,
                 user_phone: true,
                 user_birth: true,
                 start_work: true,
                 end_work: true,
-                crew_status: true,
-                contract_status: true,
                 role: {
                     select: {
                         role_name: true,
+                        role_division: true,
                     },
                 },
                 office: {
@@ -73,8 +283,6 @@ const getUserDetail = async (req, res, next) => {
                         office_name: true,
                     },
                 },
-                created_at: true,
-                updated_at: true,
             },
         })
 
@@ -84,21 +292,18 @@ const getUserDetail = async (req, res, next) => {
 
         const result = {
             user_id: user.user_id,
-            office_id: user.office_id,
-            role_id: user.role_id,
-            user_name: user.user_name,
-            user_email: user.user_email,
             user_photo: user.user_photo,
+            user_name: user.user_name,
+            crew_status: user.crew_status,
+            contract_status: user.contract_status,
+            user_email: user.user_email,
             user_phone: user.user_phone,
             user_birth: user.user_birth,
             start_work: user.start_work,
             end_work: user.end_work,
-            crew_status: user.crew_status,
-            contract_status: user.contract_status,
             role_name: user.role?.role_name ?? null,
+            role_division: user.role?.role_division ?? null,
             office_name: user.office?.office_name ?? null,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
         };
 
         return response(200, { userDetail: result }, 'Get User Detail Success', res)
@@ -107,38 +312,232 @@ const getUserDetail = async (req, res, next) => {
     }
 }
 
-const getUserBasic = async (req, res, next) => {
-    const id = Number(req.params.id)
+const createCrewUser = async (req, res, next) => {
+    const {
+        user_name,
+        crew_status,
+        contract_status,
+        user_email,
+        user_phone,
+        user_birth,
+        start_work,
+        end_work,
+        role_name,
+        role_division,
+        office_name,
+        user_password,
+    } = req.body;
 
     try {
-        const user = await prisma.user.findUnique({
-            where: { user_id: id },
+        const existing = await prisma.user.findUnique({
+            where: { user_email }
+        });
+
+        if (existing) {
+            return response(400, null, 'Email Already Registered', res);
+        }
+
+        let dbRole = await prisma.role.findFirst({
+            where: {
+                role_name: role_name || 'Crew',
+                role_division: role_division || 'General',
+            }
+        });
+        if (!dbRole) {
+            dbRole = await prisma.role.create({
+                data: {
+                    role_name: role_name || 'Crew',
+                    role_division: role_division || 'General'
+                }
+            });
+        }
+
+        let dbOffice = await prisma.office.findFirst({
+            where: {
+                office_name: office_name || 'Main Office'
+            }
+        });
+        if (!dbOffice) {
+            dbOffice = await prisma.office.create({
+                data: {
+                    office_name: office_name || 'Main Office',
+                    office_address: office_name || 'Main Office Address'
+                }
+            });
+        }
+
+        const pass = user_password || 'password123';
+        const hashed = await hashPassword(pass);
+
+        const newUser = await prisma.user.create({
+            data: {
+                user_name,
+                crew_status,
+                contract_status,
+                user_email,
+                user_phone: user_phone || null,
+                user_birth: user_birth ? new Date(user_birth) : null,
+                start_work: start_work ? new Date(start_work) : null,
+                end_work: end_work ? new Date(end_work) : null,
+                user_password: hashed,
+                role_id: dbRole.role_id,
+                office_id: dbOffice.office_id
+            },
             select: {
                 user_id: true,
                 user_name: true,
-                user_photo: true,
+                crew_status: true,
+                contract_status: true,
+                user_email: true,
+                user_phone: true,
+                user_birth: true,
+                start_work: true,
+                end_work: true,
                 role: {
                     select: {
                         role_name: true,
-                    },
+                        role_division: true
+                    }
                 },
-            },
-        })
-
-        if (!user) {
-            return response(404, null, 'User Not Found', res)
-        }
+                office: {
+                    select: {
+                        office_name: true
+                    }
+                }
+            }
+        });
 
         const result = {
-            user_id: user.user_id,
-            user_name: user.user_name,
-            user_photo: user.user_photo,
-            role_name: user.role?.role_name ?? null,
+            user_id: newUser.user_id,
+            user_name: newUser.user_name,
+            crew_status: newUser.crew_status,
+            contract_status: newUser.contract_status,
+            user_email: newUser.user_email,
+            user_phone: newUser.user_phone,
+            user_birth: newUser.user_birth,
+            start_work: newUser.start_work,
+            end_work: newUser.end_work,
+            role_name: newUser.role?.role_name ?? null,
+            role_division: newUser.role?.role_division ?? null,
+            office_name: newUser.office?.office_name ?? null
+        };
+
+        return response(201, { crewAdded: result }, 'Add Crew Success', res);
+    } catch (error) {
+        return next(error);
+    }
+}
+
+const updateCrewUser = async (req, res, next) => {
+    const userId = Number(req.params.userId);
+    const {
+        user_name,
+        crew_status,
+        contract_status,
+        user_email,
+        user_phone,
+        user_birth,
+        start_work,
+        end_work,
+        role_name,
+        role_division,
+        office_name
+    } = req.body;
+
+    try {
+        const existing = await prisma.user.findUnique({
+            where: { user_id: userId }
+        });
+
+        if (!existing) {
+            return response(404, null, 'User Not Found', res);
         }
 
-        return response(200, { userBasic: result }, 'Get User Basic Success', res)
+        const data = {};
+        if (user_name !== undefined) data.user_name = user_name;
+        if (crew_status !== undefined) data.crew_status = crew_status;
+        if (contract_status !== undefined) data.contract_status = contract_status;
+        if (user_email !== undefined) data.user_email = user_email;
+        if (user_phone !== undefined) data.user_phone = user_phone;
+        if (user_birth !== undefined) data.user_birth = user_birth ? new Date(user_birth) : null;
+        if (start_work !== undefined) data.start_work = start_work ? new Date(start_work) : null;
+        if (end_work !== undefined) data.end_work = end_work ? new Date(end_work) : null;
+
+        if (role_name !== undefined || role_division !== undefined) {
+            const currentRole = await prisma.role.findUnique({
+                where: { role_id: existing.role_id }
+            });
+            const rName = role_name !== undefined ? role_name : currentRole.role_name;
+            const rDiv = role_division !== undefined ? role_division : currentRole.role_division;
+
+            let dbRole = await prisma.role.findFirst({
+                where: { role_name: rName, role_division: rDiv }
+            });
+            if (!dbRole) {
+                dbRole = await prisma.role.create({
+                    data: { role_name: rName, role_division: rDiv }
+                });
+            }
+            data.role_id = dbRole.role_id;
+        }
+
+        if (office_name !== undefined) {
+            let dbOffice = await prisma.office.findFirst({
+                where: { office_name }
+            });
+            if (!dbOffice) {
+                dbOffice = await prisma.office.create({
+                    data: { office_name, office_address: office_name }
+                });
+            }
+            data.office_id = dbOffice.office_id;
+        }
+
+        const updated = await prisma.user.update({
+            where: { user_id: userId },
+            data,
+            select: {
+                user_id: true,
+                user_name: true,
+                crew_status: true,
+                contract_status: true,
+                user_email: true,
+                user_phone: true,
+                user_birth: true,
+                start_work: true,
+                end_work: true,
+                role: {
+                    select: {
+                        role_name: true,
+                        role_division: true
+                    }
+                },
+                office: {
+                    select: {
+                        office_name: true
+                    }
+                }
+            }
+        });
+
+        const result = {
+            user_id: updated.user_id,
+            user_name: updated.user_name,
+            crew_status: updated.crew_status,
+            contract_status: updated.contract_status,
+            user_email: updated.user_email,
+            user_phone: updated.user_phone,
+            user_birth: updated.user_birth,
+            start_work: updated.start_work,
+            end_work: updated.end_work,
+            role_name: updated.role?.role_name ?? null,
+            role_division: updated.role?.role_division ?? null,
+            office_name: updated.office?.office_name ?? null
+        };
+
+        return response(200, { crewUpdated: result }, 'Update Crew Success', res);
     } catch (error) {
-        return next(error)
+        return next(error);
     }
 }
 
@@ -265,19 +664,12 @@ const userLogin = async (req, res, next) => {
 }
 
 const updateUser = async (req, res, next) => {
-    const id = Number(req.params.id)
+    const id = Number(req.params.userId)
     const { 
-        office_id, 
-        role_id, 
         user_name, 
         user_email, 
-        user_password,
         user_phone,
-        user_birth,
-        start_work,
-        end_work,
-        crew_status,
-        contract_status
+        user_birth
     } = req.body
     const file = req.file
 
@@ -291,22 +683,10 @@ const updateUser = async (req, res, next) => {
         }
 
         const data = {}
-
-        if (office_id) data.office_id = Number(office_id)
-        if (role_id) data.role_id = Number(role_id)
-        if (user_name) data.user_name = user_name
-        if (user_email) data.user_email = user_email
+        if (user_name !== undefined) data.user_name = user_name
+        if (user_email !== undefined) data.user_email = user_email
         if (user_phone !== undefined) data.user_phone = user_phone
         if (user_birth !== undefined) data.user_birth = user_birth ? new Date(user_birth) : null
-        if (start_work !== undefined) data.start_work = start_work ? new Date(start_work) : null
-        if (end_work !== undefined) data.end_work = end_work ? new Date(end_work) : null
-        if (crew_status !== undefined) data.crew_status = crew_status
-        if (contract_status !== undefined) data.contract_status = contract_status
-
-        if (user_password) {
-            const hashed = await hashPassword(user_password)
-            data.user_password = hashed
-        }
 
         if (file) {
             data.user_photo = `/uploads/images/${file.filename}`
@@ -317,57 +697,82 @@ const updateUser = async (req, res, next) => {
             data,
             select: {
                 user_id: true,
-                office_id: true,
-                role_id: true,
+                user_photo: true,
                 user_name: true,
                 user_email: true,
+                user_phone: true,
+                user_birth: true,
+            },
+        })
+
+        return response(200, { user: updated }, 'Update User Success', res)
+    } catch (error) {
+        return next(error)
+    }
+}
+
+const updateUserPut = async (req, res, next) => {
+    const id = Number(req.params.userId)
+    const { 
+        user_name, 
+        crew_status,
+        contract_status,
+        user_email, 
+        user_phone,
+        user_birth,
+        start_work,
+        end_work
+    } = req.body
+    const file = req.file
+
+    try {
+        const existing = await prisma.user.findUnique({
+            where: { user_id: id },
+        })
+
+        if (!existing) {
+            return response(404, null, 'User Not Found', res)
+        }
+
+        const data = {}
+        if (user_name !== undefined) data.user_name = user_name
+        if (crew_status !== undefined) data.crew_status = crew_status
+        if (contract_status !== undefined) data.contract_status = contract_status
+        if (user_email !== undefined) data.user_email = user_email
+        if (user_phone !== undefined) data.user_phone = user_phone
+        if (user_birth !== undefined) data.user_birth = user_birth ? new Date(user_birth) : null
+        if (start_work !== undefined) data.start_work = start_work ? new Date(start_work) : null
+        if (end_work !== undefined) data.end_work = end_work ? new Date(end_work) : null
+
+        if (file) {
+            data.user_photo = `/uploads/images/${file.filename}`
+        }
+
+        const updated = await prisma.user.update({
+            where: { user_id: id },
+            data,
+            select: {
+                user_id: true,
                 user_photo: true,
+                user_name: true,
+                crew_status: true,
+                contract_status: true,
+                user_email: true,
                 user_phone: true,
                 user_birth: true,
                 start_work: true,
                 end_work: true,
-                crew_status: true,
-                contract_status: true,
-                role: {
-                    select: {
-                        role_name: true,
-                    },
-                },
-                office: {
-                    select: {
-                        office_name: true,
-                    },
-                },
-                updated_at: true,
             },
         })
 
-        const result = {
-            user_id: updated.user_id,
-            office_id: updated.office_id,
-            role_id: updated.role_id,
-            user_name: updated.user_name,
-            user_email: updated.user_email,
-            user_photo: updated.user_photo,
-            user_phone: updated.user_phone,
-            user_birth: updated.user_birth,
-            start_work: updated.start_work,
-            end_work: updated.end_work,
-            crew_status: updated.crew_status,
-            contract_status: updated.contract_status,
-            role_name: updated.role?.role_name ?? null,
-            office_name: updated.office?.office_name ?? null,
-            updated_at: updated.updated_at,
-        }
-
-        return response(200, { user: result }, 'Update User Success', res)
+        return response(200, { user: updated }, 'Update User (PUT) Success', res)
     } catch (error) {
         return next(error)
     }
 }
 
 const deleteUser = async (req, res, next) => {
-    const id = Number(req.params.id)
+    const id = Number(req.params.userId)
 
     try {
         const existing = await prisma.user.findUnique({
@@ -391,10 +796,15 @@ const deleteUser = async (req, res, next) => {
 
 module.exports = {
     getAllUser,
-    getUserDetail,
+    getAllCrew,
     getUserBasic,
+    getCrewUserDetail,
+    getUserDetail,
+    createCrewUser,
+    updateCrewUser,
     userRegister,
     userLogin,
     updateUser,
+    updateUserPut,
     deleteUser,
 }

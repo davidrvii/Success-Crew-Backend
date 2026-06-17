@@ -6,13 +6,11 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body unless specified.
 
-## Get All Out of Office Requests (Admin)
-- Endpoint : `/out-of-office/admin`
+## Get All Out of Office Requests
+- Endpoint : `/out-of-office/all`
 - Method : `GET`
-- Auth : (for testing/admin purposes)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -20,24 +18,54 @@ Authorization: Bearer <token>
   "message": "Get All Out Of Office Success",
   "outOfOffices": [
     {
-      "out_of_office_id": 1,
-      "user_id": 10,
-      "out_of_office_desc": "Dinas luar ke klien di Bandung",
-      "out_of_office_date": "2026-06-20T00:00:00.000Z",
-      "out_of_office_status": "PENDING",
-      "created_at": "2026-06-17T07:00:00.000Z",
-      "updated_at": "2026-06-17T07:00:00.000Z"
+      "outofoffice_id": 1,
+      "outofoffice_desc": "Dinas luar ke klien di Bandung",
+      "outofoffice_date": "2026-06-20T00:00:00.000Z",
+      "outofoffice_status": "PENDING"
     }
   ]
 }
 ```
 
-## Get Crew Out of Office Requests
+## Get Out of Office Basic All
+- Endpoint : `/outofoffice/basic/all`
+- Method : `GET`
+- Response Success (output: total outofoffice unapproved) :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Out Of Office Basic All Success",
+  "outOfOffices": [
+    {
+      "outofoffice_id": 1,
+      "outofoffice_status": "PENDING"
+    }
+  ],
+  "total_unapproved": 1
+}
+```
+
+## Get Out of Office Basic By ID
+- Endpoint : `/outofoffice/basic/:outOfOfficeId`
+- Method : `GET`
+- Auth : ✅
+- Response Success (output: total outofoffice unapproved overall) :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Out Of Office Basic Success",
+  "outOfOfficeBasic": {
+    "outofoffice_id": 1,
+    "outofoffice_status": "PENDING",
+    "total_unapproved": 1
+  }
+}
+```
+
+## Get Crew Out of Office Requests (By User) (Kept as per Rule 2)
 - Endpoint : `/out-of-office/crew/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
 - Response Success :
 ```json
 {
@@ -57,12 +85,10 @@ Authorization: Bearer <token>
 }
 ```
 
-## Get Out of Office Detail
+## Get Out of Office Detail (Kept as per Rule 2)
 - Endpoint : `/out-of-office/detail/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : out_of_office_id (number)
 - Response Success :
 ```json
 {
@@ -80,43 +106,37 @@ Authorization: Bearer <token>
 }
 ```
 
-## Create Out of Office Request
-- Endpoint : `/out-of-office/add`
+## Add Out of Office Request
+- Endpoint : `/outofoffice/add`
 - Method : `POST`
 - Auth : ✅
 - Request Body :
 ```json
 {
-  "out_of_office_desc": "Dinas luar ke klien di Bandung",
-  "out_of_office_date": "2026-06-20"
+  "user_id": 10,
+  "outofoffice_desc": "Dinas luar ke klien di Bandung",
+  "outofoffice_date": "2026-06-20",
+  "outofoffice_status": "PENDING"
 }
 ```
-- Required :
-  - `out_of_office_desc`
-  - `out_of_office_date`
 - Response Success :
 ```json
 {
   "statusCode": 201,
   "message": "Create Out Of Office Success",
-  "newOutOfOffice": {
-    "out_of_office_id": 1,
+  "outOfOfficeCreated": {
     "user_id": 10,
-    "out_of_office_desc": "Dinas luar ke klien di Bandung",
-    "out_of_office_date": "2026-06-20T00:00:00.000Z",
-    "out_of_office_status": "PENDING",
-    "created_at": "2026-06-17T07:00:00.000Z",
-    "updated_at": "2026-06-17T07:00:00.000Z"
+    "outofoffice_desc": "Dinas luar ke klien di Bandung",
+    "outofoffice_date": "2026-06-20T00:00:00.000Z",
+    "outofoffice_status": "PENDING"
   }
 }
 ```
 
-## Update Out of Office Status (Approval)
-- Endpoint : `/out-of-office/update/:id`
+## Patch Out of Office Status
+- Endpoint : `/outofoffice/update/:outOfOfficeId`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : out_of_office_id (number)
 - Request Body :
 ```json
 {
@@ -128,25 +148,42 @@ Authorization: Bearer <token>
 {
   "statusCode": 200,
   "message": "Update Out Of Office Success",
-  "updatedOutOfOffice": {
-    "out_of_office_id": 1,
-    "user_id": 10,
-    "out_of_office_desc": "Dinas luar ke klien di Bandung",
-    "out_of_office_date": "2026-06-20T00:00:00.000Z",
-    "out_of_office_status": "APPROVED",
-    "created_at": "2026-06-17T07:00:00.000Z",
-    "updated_at": "2026-06-17T07:05:00.000Z"
+  "outOfOfficeUpdated": {
+    "outofoffice_id": 1,
+    "outofoffice_status": "APPROVED"
   }
 }
 ```
-> Note: If the status is updated to `APPROVED` or `DITERIMA`, an attendance record for the date will automatically be created/updated with `attendance_status: 'Dinas Luar'`.
+
+## Update Out of Office Request (PUT)
+- Endpoint : `/out-of-office/update/:outOfOfficeId`
+- Method : `UPDATE`
+- Auth : ✅
+- Request Body :
+```json
+{
+  "outofoffice_desc": "Dinas luar ke klien di Bandung updated",
+  "outofoffice_date": "2026-06-21",
+  "outofoffice_status": "APPROVED"
+}
+```
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Update Out Of Office Success",
+  "outOfOfficeUpdated": {
+    "outofoffice_desc": "Dinas luar ke klien di Bandung updated",
+    "outofoffice_date": "2026-06-21T00:00:00.000Z",
+    "outofoffice_status": "APPROVED"
+  }
+}
+```
 
 ## Delete Out of Office Request
-- Endpoint : `/out-of-office/delete/:id`
+- Endpoint : `/out-of-office/delete/:outOfOfficeId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : out_of_office_id (number)
 - Response Success :
 ```json
 {

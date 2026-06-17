@@ -11,66 +11,163 @@ const getAllVisit = async (req, res, next) => {
             orderBy: { created_at: 'desc' },
             include: {
                 visitor: true,
-                user: {
-                    select: {
-                        user_id: true,
-                        user_name: true,
-                        user_email: true,
-                        user_photo: true,
-                    }
-                },
-                follow_up: true,
-                product_sold: true,
-                unit_serviced: true,
             },
         })
 
-        const formattedVisits = visits.map(visit => {
-            let lastStatus = visit.visitor_status;
-            if (visit.follow_up && visit.follow_up.length > 0) {
-                const sortedFollowUp = [...visit.follow_up].sort((a, b) => a.follow_up_id - b.follow_up_id);
-                const lastFollowUp = sortedFollowUp[sortedFollowUp.length - 1];
-                lastStatus = lastFollowUp.follow_up_status;
-            }
-            return {
-                visit_id: visit.visit_id,
-                visitor_interest: visit.visitor_interest,
-                visitor_status: lastStatus,
-                visit_type: visit.visit_type,
-                visit_desc: visit.visit_desc,
-                visit_sales: visit.visit_sales,
-                user_id: visit.user_id,
-                created_at: visit.created_at,
-                visitor_name: visit.visitor?.visitor_name || null,
-                visitor_phone: visit.visitor?.visitor_phone || null,
-                visitor_company: visit.visitor?.visitor_company || null,
-                visitor_category: visit.visitor?.visitor_category || null,
-            };
-        });
+        const result = visits.map(v => ({
+            visitor_name: v.visitor?.visitor_name ?? null,
+            visitor_phone: v.visitor?.visitor_phone ?? null,
+            visitory_category: v.visitor?.visitor_category ?? null,
+            visitor_company: v.visitor?.visitor_company ?? null,
+            visit_type: v.visit_type,
+            created_at: v.created_at,
+            interest: v.visitor_interest,
+            visit_status: v.visit_status,
+            visit_desc: v.visit_desc,
+            visit_sales: v.visit_sales,
+            user_id: v.user_id
+        }));
 
-        return response(
-            200,
-            { visits: formattedVisits },
-            'Get All Visit Success',
-            res
-        )
+        return response(200, { visits: result }, 'Get All Visit Success', res)
     } catch (error) {
         return next(error)
     }
 }
 
+const getVisitList = async (req, res, next) => {
+    try {
+        const visits = await prisma.visit.findMany({
+            orderBy: { created_at: 'desc' },
+            include: {
+                visitor: true
+            }
+        });
+
+        const result = visits.map(v => ({
+            visit_id: v.visit_id,
+            visitor_name: v.visitor?.visitor_name ?? null,
+            visitor_interest: v.visitor_interest,
+            visit_type: v.visit_type,
+            visitor_category: v.visitor?.visitor_category ?? null,
+            visit_status: v.visit_status,
+            created_at: v.created_at
+        }));
+
+        return response(200, { visitList: result }, 'Get Visit List Success', res);
+    } catch (error) {
+        return next(error);
+    }
+}
+
+const getVisitStats = async (req, res, next) => {
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        const visits = await prisma.visit.findMany({
+            where: {
+                created_at: {
+                    gte: sevenDaysAgo
+                }
+            },
+            select: {
+                visit_id: true,
+                visit_type: true,
+                created_at: true
+            }
+        });
+
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const visitsToday = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === todayStr);
+        const getNormalizedType = (type) => (type || '').toLowerCase().replace(/_/g, ' ').trim();
+
+        const totalUnitService = await prisma.unit_serviced.count({
+            where: {
+                created_at: {
+                    gte: sevenDaysAgo
+                }
+            }
+        });
+
+        const productSoldAggregate = await prisma.product_sold.aggregate({
+            where: {
+                created_at: {
+                    gte: sevenDaysAgo
+                }
+            },
+            _sum: {
+                product_sold_quantity: true
+            }
+        });
+        const totalProductSold = productSoldAggregate._sum.product_sold_quantity || 0;
+
+        const dailyCount = {
+            total_visit: visitsToday.length,
+            call_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'call in').length,
+            chat_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'chat in').length,
+            walk_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'walk in').length,
+            total_unit_service: totalUnitService,
+            total_product_sold: totalProductSold
+        };
+
+        const weeklyCount = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toLocaleDateString('en-CA');
+            const count = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === dateStr).length;
+
+            weeklyCount.push({
+                date: dateStr,
+                total_visit: count
+            });
+        }
+
+        const hourlyCounts = {};
+        for (let h = 9; h <= 17; h++) {
+            hourlyCounts[h] = 0;
+        }
+
+        visits.forEach(v => {
+            const hour = new Date(v.created_at).getHours();
+            if (hour >= 9 && hour <= 17) {
+                if (hourlyCounts[hour] !== undefined) {
+                    hourlyCounts[hour]++;
+                }
+            }
+        });
+
+        const rushHour = Object.keys(hourlyCounts).map(h => {
+            const hNum = Number(h);
+            const hourStr = hNum < 10 ? '0' + hNum : '' + hNum;
+            return {
+                hour: `${hourStr}:00`,
+                total_visit: hourlyCounts[hNum]
+            };
+        });
+
+        return response(200, {
+            dailyCount,
+            weeklyCount,
+            rushHour
+        }, 'Get Visit Stats Success', res);
+    } catch (error) {
+        return next(error);
+    }
+}
+
 const getVisitDetail = async (req, res, next) => {
-    const id = Number(req.params.id)
+    const visitId = Number(req.params.visitId)
 
     try {
         const visit = await prisma.visit.findUnique({
-            where: { visit_id: id },
+            where: { visit_id: visitId },
             include: {
                 visitor: true,
                 user: {
                     select: {
-                        user_id: true,
-                        user_name: true,
+                        user_name: true
                     }
                 },
                 follow_up: true,
@@ -83,38 +180,46 @@ const getVisitDetail = async (req, res, next) => {
             return response(404, null, 'Visit Not Found', res)
         }
 
-        let lastStatus = visit.visitor_status;
-        if (visit.follow_up && visit.follow_up.length > 0) {
-            const sortedFollowUp = [...visit.follow_up].sort((a, b) => a.follow_up_id - b.follow_up_id);
-            const lastFollowUp = sortedFollowUp[sortedFollowUp.length - 1];
-            lastStatus = lastFollowUp.follow_up_status;
-        }
-
         const formattedVisit = {
             visit_id: visit.visit_id,
-            visitor_interest: visit.visitor_interest,
-            visitor_status: lastStatus,
-            visit_type: visit.visit_type,
-            visit_desc: visit.visit_desc,
-            visit_sales: visit.visit_sales,
-            user_id: visit.user_id,
-            created_at: visit.created_at,
+            visitor_id: visit.visitor_id,
             visitor_name: visit.visitor?.visitor_name || null,
             visitor_phone: visit.visitor?.visitor_phone || null,
-            visitor_company: visit.visitor?.visitor_company || null,
             visitor_category: visit.visitor?.visitor_category || null,
-            sales_name: visit.user?.user_name || null,
-            follow_up: visit.follow_up,
-            product_sold: visit.product_sold,
-            unit_serviced: visit.unit_serviced,
+            visitor_company: visit.visitor?.visitor_company || null,
+            visit_type: visit.visit_type,
+            created_at: visit.created_at,
+            visit_interest: visit.visitor_interest,
+            visit_status: visit.visit_status,
+            visit_desc: visit.visit_desc,
+            user_name: visit.user?.user_name || null,
+            "Follow UP": (visit.follow_up || []).map(f => ({
+                follow_up_id: f.follow_up_id,
+                follow_up_status: f.follow_up_status,
+                follow_up_action: f.follow_up_action,
+                created_at: f.created_at
+            })),
+            "Product Sold": (visit.product_sold || []).map(p => ({
+                product_sold_id: p.product_sold_id,
+                product_sold_name: p.product_sold_name,
+                product_sold_quantity: p.product_sold_quantity,
+                product_sold_total: p.product_sold_total,
+                product_sold_desc: p.product_sold_desc,
+                created_at: p.created_at
+            })),
+            "Unit Serviced": (visit.unit_serviced || []).map(u => ({
+                unit_serviced_id: u.unit_serviced_id,
+                unit_serviced_name: u.unit_serviced_name,
+                unit_serviced_issue: u.unit_serviced_issue,
+                unit_serviced_action: u.unit_serviced_action,
+                unit_serviced_status: u.unit_serviced_status,
+                unit_serviced_id_desc: u.unit_serviced_desc,
+                unit_serviced_desc: u.unit_serviced_desc,
+                created_at: u.created_at
+            }))
         };
 
-        return response(
-            200,
-            { visit: formattedVisit },
-            'Get Visit Detail Success',
-            res
-        )
+        return response(200, { visit: formattedVisit }, 'Get Visit Detail Success', res)
     } catch (error) {
         return next(error)
     }
@@ -125,15 +230,17 @@ const createNewVisit = async (req, res, next) => {
         visitor_id,
         visitor_name,
         visitor_phone,
-        visitor_company,
         visitor_category,
-        visitor_information,
-        visitor_interest,
-        visitor_status,
+        visitory_category,
+        visitor_company,
         visit_type,
+        created_at,
+        interest,
+        visitor_interest,
+        visit_status,
         visit_desc,
-        user_id,
-        visit_sales
+        visit_sales,
+        user_id
     } = req.body;
 
     try {
@@ -142,91 +249,139 @@ const createNewVisit = async (req, res, next) => {
             return response(401, null, "Unauthorized", res);
         }
 
-        if (!visitor_interest || !visitor_status || !visit_type) {
-            return response(400, null, "Missing Required Field (visitor_interest, visitor_status, visit_type)", res);
+        const final_interest = visitor_interest || interest;
+        const final_status = visit_status || "PENDING";
+        const final_type = visit_type;
+
+        if (!final_interest || !final_type) {
+            return response(400, null, "Missing Required Field (interest/visitor_interest, visit_type)", res);
         }
 
-        let targetVisitorId = visitor_id ? Number(visitor_id) : null;
+        let dbVisitor = null;
 
-        if (!targetVisitorId) {
-            // New visitor: require visitor_name to create visitor first
-            if (!visitor_name) {
-                return response(400, null, "visitor_id or visitor_name is required", res);
-            }
+        if (visitor_id) {
+            dbVisitor = await prisma.visitor.findUnique({
+                where: { visitor_id: Number(visitor_id) }
+            });
+        }
 
-            const newVisitor = await prisma.visitor.create({
-                data: {
-                    visitor_name,
-                    visitor_phone: visitor_phone ?? null,
-                    visitor_company: visitor_company ?? null,
-                    visitor_category: visitor_category || visitor_information || null,
+        if (!dbVisitor && visitor_name) {
+            dbVisitor = await prisma.visitor.findFirst({
+                where: {
+                    visitor_name: visitor_name,
+                    visitor_phone: visitor_phone || null
                 }
             });
-            targetVisitorId = newVisitor.visitor_id;
+
+            if (!dbVisitor) {
+                dbVisitor = await prisma.visitor.create({
+                    data: {
+                        visitor_name,
+                        visitor_phone: visitor_phone || null,
+                        visitor_company: visitor_company || null,
+                        visitor_category: visitor_category || visitory_category || null
+                    }
+                });
+            }
+        }
+
+        if (!dbVisitor) {
+            dbVisitor = await prisma.visitor.create({
+                data: {
+                    visitor_name: 'Anonymous',
+                    visitor_phone: null,
+                    visitor_company: null,
+                    visitor_category: null
+                }
+            });
         }
 
         const created = await prisma.visit.create({
             data: {
                 user_id: userId,
-                visitor_id: targetVisitorId,
-                visitor_interest,
-                visitor_status,
-                visit_type,
-                visit_desc: visit_desc ?? null,
-                visit_sales: visit_sales ?? null,
+                visitor_id: dbVisitor.visitor_id,
+                visitor_interest: final_interest,
+                visit_status: final_status,
+                visit_type: final_type,
+                visit_desc: visit_desc || null,
+                visit_sales: visit_sales || null,
+                created_at: created_at ? new Date(created_at) : new Date()
             },
         });
 
-        return response(201, { visit: created }, "Create Visit Success", res);
+        return response(201, { visitCreated: created }, "Create Visit Success", res);
     } catch (error) {
         return next(error);
     }
 }
 
-const updateVisit = async (req, res, next) => {
-    const id = Number(req.params.id);
+const updateVisitPut = async (req, res, next) => {
+    const visitId = Number(req.params.visitId);
     const {
-        visitor_id,
-        user_id,
-        visit_sales,
-        visitor_interest,
-        visitor_status,
+        visitor_name,
+        visitor_phone,
+        visitor_category,
+        visitory_category,
+        visitor_company,
         visit_type,
+        created_at,
+        interest,
+        visitor_interest,
+        visit_status,
         visit_desc,
+        visit_sales,
+        user_id
     } = req.body;
 
     try {
         const existing = await prisma.visit.findUnique({
-            where: { visit_id: id },
+            where: { visit_id: visitId },
+            include: { visitor: true }
         });
 
         if (!existing) {
             return response(404, null, "Visit Not Found", res);
         }
 
-        const data = {};
+        if (existing.visitor_id) {
+            const visitorData = {};
+            if (visitor_name !== undefined) visitorData.visitor_name = visitor_name;
+            if (visitor_phone !== undefined) visitorData.visitor_phone = visitor_phone;
+            if (visitor_company !== undefined) visitorData.visitor_company = visitor_company;
+            const cat = visitor_category !== undefined ? visitor_category : visitory_category;
+            if (cat !== undefined) visitorData.visitor_category = cat;
 
-        if (visitor_id !== undefined) data.visitor_id = Number(visitor_id);
-        if (user_id !== undefined) data.user_id = Number(user_id);
-        if (visit_sales !== undefined) data.visit_sales = visit_sales;
-        if (visitor_interest !== undefined) data.visitor_interest = visitor_interest;
-        if (visitor_status !== undefined) data.visitor_status = visitor_status;
-        if (visit_type !== undefined) data.visit_type = visit_type;
-        if (visit_desc !== undefined) data.visit_desc = visit_desc;
+            if (Object.keys(visitorData).length > 0) {
+                await prisma.visitor.update({
+                    where: { visitor_id: existing.visitor_id },
+                    data: visitorData
+                });
+            }
+        }
+
+        const visitData = {};
+        if (user_id !== undefined) visitData.user_id = Number(user_id);
+        if (visit_type !== undefined) visitData.visit_type = visit_type;
+        if (created_at !== undefined) visitData.created_at = created_at ? new Date(created_at) : null;
+        const interestVal = visitor_interest !== undefined ? visitor_interest : interest;
+        if (interestVal !== undefined) visitData.visitor_interest = interestVal;
+        if (visit_status !== undefined) visitData.visit_status = visit_status;
+        if (visit_desc !== undefined) visitData.visit_desc = visit_desc;
+        if (visit_sales !== undefined) visitData.visit_sales = visit_sales;
 
         const updated = await prisma.visit.update({
-            where: { visit_id: id },
-            data,
+            where: { visit_id: visitId },
+            data: visitData
         });
 
-        return response(200, { visit: updated }, "Update Visit Success", res);
+        return response(200, { visitUpdated: updated }, "Update Visit Success", res);
     } catch (error) {
         return next(error);
     }
-};
+}
 
 const deleteVisit = async (req, res, next) => {
-    const id = Number(req.params.id)
+    const id = Number(req.params.visitId)
 
     try {
         const existing = await prisma.visit.findUnique({
@@ -697,9 +852,11 @@ const deleteVisitUnitServiced = async (req, res, next) => {
 
 module.exports = {
     getAllVisit,
+    getVisitList,
+    getVisitStats,
     getVisitDetail,
     createNewVisit,
-    updateVisit,
+    updateVisitPut,
     deleteVisit,
 
     getVisitFollowUp,

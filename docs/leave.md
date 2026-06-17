@@ -6,13 +6,11 @@ Use the following header for endpoints that require authentication:
 Authorization: Bearer <token>
 ```
 
-> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body.
+> Note: `user_id` for creating user-based data (attendance, leave, overtime, out_of_office, visit, notification) is taken from the JWT (`req.userData.user_id`), **not** from the request body unless specified.
 
-## Get All Leave Requests (Admin)
-- Endpoint : `/leave/admin`
+## Get All Leave Request
+- Endpoint : `/leave/all`
 - Method : `GET`
-- Auth : (for testing/admin purposes)
-- Request Body : -
 - Response Success :
 ```json
 {
@@ -21,23 +19,53 @@ Authorization: Bearer <token>
   "leaves": [
     {
       "leave_id": 1,
-      "user_id": 10,
       "leave_desc": "Acara keluarga penting di luar kota",
       "leave_date": "2026-06-25T00:00:00.000Z",
-      "leave_status": "PENDING",
-      "created_at": "2026-06-17T07:00:00.000Z",
-      "updated_at": "2026-06-17T07:00:00.000Z"
+      "leave_status": "PENDING"
     }
   ]
 }
 ```
 
-## Get Crew Leave Requests
+## Get Leave Basic All
+- Endpoint : `/leaves/basic/all`
+- Method : `GET`
+- Response Success (output: total leave unapproved) :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Leave Basic All Success",
+  "leaves": [
+    {
+      "leave_id": 1,
+      "leave_status": "PENDING"
+    }
+  ],
+  "total_unapproved": 1
+}
+```
+
+## Get Leave Basic By ID
+- Endpoint : `/leaves/basic/:leaveId`
+- Method : `GET`
+- Auth : ✅
+- Response Success (output: total leave unapproved overall) :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Leave Basic Success",
+  "leaveBasic": {
+    "leave_id": 1,
+    "leave_status": "PENDING",
+    "total_unapproved": 1
+  }
+}
+```
+
+## Get Crew Leave Requests (By User) (Kept as per Rule 2)
 - Endpoint : `/leave/crew/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : user_id (number)
 - Response Success :
 ```json
 {
@@ -57,12 +85,10 @@ Authorization: Bearer <token>
 }
 ```
 
-## Get Leave Detail
+## Get Leave Detail (Kept as per Rule 2)
 - Endpoint : `/leave/detail/:id`
 - Method : `GET`
 - Auth : ✅
-- Request Params :
-  - `id` : leave_id (number)
 - Response Success :
 ```json
 {
@@ -80,43 +106,37 @@ Authorization: Bearer <token>
 }
 ```
 
-## Create Leave Request
+## Add Leave
 - Endpoint : `/leave/add`
 - Method : `POST`
 - Auth : ✅
 - Request Body :
 ```json
 {
+  "user_id": 10,
   "leave_desc": "Acara keluarga penting di luar kota",
-  "leave_date": "2026-06-25"
+  "leave_date": "2026-06-25",
+  "leave_status": "PENDING"
 }
 ```
-- Required :
-  - `leave_desc`
-  - `leave_date`
 - Response Success :
 ```json
 {
   "statusCode": 201,
   "message": "Create Leave Success",
-  "newLeave": {
-    "leave_id": 1,
+  "leaveCreated": {
     "user_id": 10,
     "leave_desc": "Acara keluarga penting di luar kota",
     "leave_date": "2026-06-25T00:00:00.000Z",
-    "leave_status": "PENDING",
-    "created_at": "2026-06-17T07:00:00.000Z",
-    "updated_at": "2026-06-17T07:00:00.000Z"
+    "leave_status": "PENDING"
   }
 }
 ```
 
-## Update Leave Status (Approval)
-- Endpoint : `/leave/update/:id`
+## Patch Leave Status
+- Endpoint : `/leave/update/:leaveId`
 - Method : `PATCH`
 - Auth : ✅
-- Request Params :
-  - `id` : leave_id (number)
 - Request Body :
 ```json
 {
@@ -128,25 +148,42 @@ Authorization: Bearer <token>
 {
   "statusCode": 200,
   "message": "Update Leave Success",
-  "updatedLeave": {
+  "leaveUpdated": {
     "leave_id": 1,
-    "user_id": 10,
-    "leave_desc": "Acara keluarga penting di luar kota",
-    "leave_date": "2026-06-25T00:00:00.000Z",
-    "leave_status": "APPROVED",
-    "created_at": "2026-06-17T07:00:00.000Z",
-    "updated_at": "2026-06-17T07:06:00.000Z"
+    "leave_status": "APPROVED"
   }
 }
 ```
-> Note: If the status is updated to `APPROVED` or `DITERIMA`, an attendance record for the date will automatically be created/updated with `attendance_status: 'Cuti'`.
 
-## Delete Leave Request
-- Endpoint : `/leave/delete/:id`
+## Update Leave (PUT)
+- Endpoint : `/leave/update/:leaveId`
+- Method : `UPDATE`
+- Auth : ✅
+- Request Body :
+```json
+{
+  "leave_desc": "Acara keluarga penting di luar kota updated",
+  "leave_date": "2026-06-26",
+  "leave_status": "APPROVED"
+}
+```
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Update Leave Success",
+  "leaveUpdated": {
+    "leave_desc": "Acara keluarga penting di luar kota updated",
+    "leave_date": "2026-06-26T00:00:00.000Z",
+    "leave_status": "APPROVED"
+  }
+}
+```
+
+## Delete Leave
+- Endpoint : `/leave/delete/:leaveId`
 - Method : `DELETE`
 - Auth : ✅
-- Request Params :
-  - `id` : leave_id (number)
 - Response Success :
 ```json
 {
