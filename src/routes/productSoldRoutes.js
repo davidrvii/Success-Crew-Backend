@@ -7,4 +7,9 @@ router.post('/add', authentication, authorization, productSoldController.createP
 router.put('/update/:productSoldId', authentication, authorization, productSoldController.updateProductSoldPut);
 router.delete('/delete/:productSoldId', authentication, authorization, productSoldController.deleteProductSold);
 
+router.get('/visit/:visitId', authentication, productSoldController.getVisitProductsSold);
+router.post('/visit/:visitId', authentication, authorization, productSoldController.createVisitProductSold);
+router.patch('/visit/:visitId/:productSoldId', authentication, authorization, productSoldController.updateVisitProductSold);
+router.delete('/visit/:visitId/:productSoldId', authentication, authorization, productSoldController.deleteVisitProductSold);
+
 module.exports = router;

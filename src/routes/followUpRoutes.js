@@ -7,4 +7,9 @@ router.post('/add', authentication, authorization, followUpController.createFoll
 router.put('/update/:followUpId', authentication, authorization, followUpController.updateFollowUpPut);
 router.delete('/delete/:followUpId', authentication, authorization, followUpController.deleteFollowUp);
 
+router.get('/visit/:visitId', authentication, followUpController.getVisitFollowUp);
+router.post('/visit/:visitId', authentication, authorization, followUpController.createVisitFollowUp);
+router.patch('/visit/:visitId/:followUpId', authentication, authorization, followUpController.updateVisitFollowUp);
+router.delete('/visit/:visitId/:followUpId', authentication, authorization, followUpController.deleteVisitFollowUp);
+
 module.exports = router;

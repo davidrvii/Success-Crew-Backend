@@ -93,3 +93,88 @@ Authorization: Bearer <token>
   "productSoldId": 1
 }
 ```
+
+---
+
+# VISIT PRODUCT SOLD
+
+## Get Visit Products Sold
+- Endpoint : `/product-sold/visit/:visitId`
+- Method : `GET`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Visit Products Sold Success",
+  "products": [
+    {
+      "product_sold_id": 1,
+      "visit_id": 1,
+      "product_sold_name": "Laptop",
+      "product_sold_quantity": 1,
+      "product_sold_total": 15000000,
+      "product_sold_desc": "Gaming",
+      "created_at": "2026-01-21T03:30:27.000Z",
+      "updated_at": "2026-01-21T03:30:27.000Z"
+    }
+  ]
+}
+```
+
+## Create Visit Product Sold
+- Endpoint : `/product-sold/visit/:visitId`
+- Method : `POST`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 201,
+  "message": "Create Product Sold Success",
+  "productSold": {
+    "product_sold_id": 1,
+    "visit_id": 1,
+    "product_sold_name": "Laptop",
+    "product_sold_quantity": 1,
+    "product_sold_total": 15000000,
+    "product_sold_desc": "Gaming",
+    "created_at": "2026-01-21T03:30:27.000Z",
+    "updated_at": "2026-01-21T03:30:27.000Z"
+  }
+}
+```
+
+## Update Visit Product Sold
+- Endpoint : `/product-sold/visit/:visitId/:productSoldId`
+- Method : `PATCH`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Update Product Sold Success",
+  "productSold": {
+    "product_sold_id": 1,
+    "visit_id": 1,
+    "product_sold_name": "PC",
+    "product_sold_quantity": 1,
+    "product_sold_total": 12000000,
+    "product_sold_desc": "Office",
+    "created_at": "2026-01-21T03:30:27.000Z",
+    "updated_at": "2026-01-21T04:30:27.000Z"
+  }
+}
+```
+
+## Delete Visit Product Sold
+- Endpoint : `/product-sold/visit/:visitId/:productSoldId`
+- Method : `DELETE`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Delete Product Sold Success",
+  "productSoldId": 1
+}
+```

@@ -100,3 +100,91 @@ Authorization: Bearer <token>
   "unitServicedId": 1
 }
 ```
+
+---
+
+# VISIT UNIT SERVICED
+
+## Get Visit Units Serviced
+- Endpoint : `/unit-serviced/visit/:visitId`
+- Method : `GET`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Visit Units Serviced Success",
+  "units": [
+    {
+      "unit_serviced_id": 1,
+      "visit_id": 1,
+      "unit_serviced_name": "Laptop",
+      "unit_serviced_issue": "keyboard rusak",
+      "unit_serviced_action": "ganti keyboard",
+      "unit_serviced_status": "SELESAI",
+      "unit_serviced_desc": "Cleaning",
+      "created_at": "2026-01-21T03:30:27.000Z",
+      "updated_at": "2026-01-21T03:30:27.000Z"
+    }
+  ]
+}
+```
+
+## Create Visit Unit Serviced
+- Endpoint : `/unit-serviced/visit/:visitId`
+- Method : `POST`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 201,
+  "message": "Create Unit Serviced Success",
+  "unitServiced": {
+    "unit_serviced_id": 1,
+    "visit_id": 1,
+    "unit_serviced_name": "Laptop",
+    "unit_serviced_issue": "keyboard rusak",
+    "unit_serviced_action": "ganti keyboard",
+    "unit_serviced_status": "SELESAI",
+    "unit_serviced_desc": "Cleaning",
+    "created_at": "2026-01-21T03:30:27.000Z",
+    "updated_at": "2026-01-21T03:30:27.000Z"
+  }
+}
+```
+
+## Update Visit Unit Serviced
+- Endpoint : `/unit-serviced/visit/:visitId/:unitServicedId`
+- Method : `PATCH`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Update Unit Serviced Success",
+  "unitServiced": {
+    "unit_serviced_id": 1,
+    "visit_id": 1,
+    "unit_serviced_name": "Laptop",
+    "unit_serviced_issue": "keyboard rusak",
+    "unit_serviced_action": "ganti keyboard",
+    "unit_serviced_status": "SELESAI",
+    "unit_serviced_desc": "Install OS",
+    "created_at": "2026-01-21T03:30:27.000Z",
+    "updated_at": "2026-01-21T04:30:27.000Z"
+  }
+}
+```
+
+## Delete Visit Unit Serviced
+- Endpoint : `/unit-serviced/visit/:visitId/:unitServicedId`
+- Method : `DELETE`
+- Auth : ✅
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Delete Unit Serviced Success",
+  "unitServicedId": 1
+}
+```
