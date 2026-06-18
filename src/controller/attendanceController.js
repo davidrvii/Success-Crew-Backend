@@ -72,16 +72,31 @@ const getCrewAttendance = async (req, res, next) => {
                 leave: {
                     select: {
                         leave_id: true,
-                        leave_date: true
+                        leave_desc: true,
+                        leave_date: true,
+                        leave_status: true
                     },
                     orderBy: { leave_date: 'desc' }
                 },
                 overtime: {
                     select: {
                         overtime_id: true,
-                        overtime_start: true
+                        overtime_desc: true,
+                        overtime_date: true,
+                        overtime_start: true,
+                        overtime_end: true,
+                        overtime_status: true
                     },
                     orderBy: { overtime_start: 'desc' }
+                },
+                out_of_office: {
+                    select: {
+                        out_of_office_id: true,
+                        out_of_office_desc: true,
+                        out_of_office_date: true,
+                        out_of_office_status: true
+                    },
+                    orderBy: { out_of_office_date: 'desc' }
                 }
             }
         });
@@ -107,6 +122,11 @@ const getCrewAttendance = async (req, res, next) => {
             return date.getFullYear() === currentYear;
         });
 
+        const outOfOfficesThisYear = user.out_of_office.filter(o => {
+            const date = new Date(o.out_of_office_date);
+            return date.getFullYear() === currentYear;
+        });
+
         const total_attendance = attendancesThisYear.filter(a => {
             const status = (a.attendance_status || '').toLowerCase();
             return status === 'hadir' || status === 'telat';
@@ -119,15 +139,68 @@ const getCrewAttendance = async (req, res, next) => {
 
         const total_leave = leavesThisYear.length;
         const total_overtime = overtimesThisYear.length;
+        const total_out_of_office = outOfOfficesThisYear.length;
+
+        const attendanceHistoryList = user.attendance.map(a => ({
+            id: a.attendance_id,
+            type: 'attendance',
+            date: a.attendance_date,
+            status: a.attendance_status,
+            description: null,
+            details: {
+                attendance_in: a.attendance_in,
+                attendance_out: a.attendance_out
+            }
+        }));
+
+        const leaveHistoryList = user.leave.map(l => ({
+            id: l.leave_id,
+            type: 'leave',
+            date: l.leave_date,
+            status: l.leave_status,
+            description: l.leave_desc,
+            details: {}
+        }));
+
+        const overtimeHistoryList = user.overtime.map(o => ({
+            id: o.overtime_id,
+            type: 'overtime',
+            date: o.overtime_date || o.overtime_start,
+            status: o.overtime_status,
+            description: o.overtime_desc,
+            details: {
+                overtime_start: o.overtime_start,
+                overtime_end: o.overtime_end
+            }
+        }));
+
+        const outOfOfficeHistoryList = user.out_of_office.map(o => ({
+            id: o.out_of_office_id,
+            type: 'out_of_office',
+            date: o.out_of_office_date,
+            status: o.out_of_office_status,
+            description: o.out_of_office_desc,
+            details: {}
+        }));
+
+        const combinedHistory = [
+            ...attendanceHistoryList,
+            ...leaveHistoryList,
+            ...overtimeHistoryList,
+            ...outOfOfficeHistoryList
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         const result = {
             total_attendance,
             total_late,
             total_leave,
             total_overtime,
+            total_out_of_office,
+            history: combinedHistory,
             attendance: user.attendance,
             leave: user.leave.map(l => ({ leave_id: l.leave_id })),
-            overtime: user.overtime.map(o => ({ overtime_id: o.overtime_id }))
+            overtime: user.overtime.map(o => ({ overtime_id: o.overtime_id })),
+            out_of_office: user.out_of_office.map(o => ({ out_of_office_id: o.out_of_office_id }))
         };
 
         return response(200, { crewAttendanceHistory: result }, 'Get Crew Attendance Success', res);
@@ -191,11 +264,57 @@ const createNewAttendance = async (req, res, next) => {
             return response(400, null, 'Missing Required Field: attendance_date', res);
         }
 
+        const searchDate = new Date(attendance_date);
+
+        // 1. Check if there is an existing attendance record on this date with "Cuti" or "Dinas Luar"
+        const existing = await prisma.attendance.findFirst({
+            where: {
+                user_id: targetUserId,
+                attendance_date: searchDate
+            }
+        });
+
+        if (existing) {
+            const status = (existing.attendance_status || '').toLowerCase();
+            if (status === 'cuti') {
+                return response(400, null, "hari ini adalah jadwal cuti", res);
+            }
+            if (status === 'dinas luar' || status === 'dinas') {
+                return response(400, null, "hari ini adalah jadwal dinas", res);
+            }
+        }
+
+        // 2. Check in leave table for approved leaves on this date
+        const existingLeave = await prisma.leave.findFirst({
+            where: {
+                user_id: targetUserId,
+                leave_date: searchDate,
+                leave_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
+            }
+        });
+
+        if (existingLeave) {
+            return response(400, null, "hari ini adalah jadwal cuti", res);
+        }
+
+        // 3. Check in out_of_office table for approved out-of-office on this date
+        const existingOutOfOffice = await prisma.out_of_office.findFirst({
+            where: {
+                user_id: targetUserId,
+                out_of_office_date: searchDate,
+                out_of_office_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
+            }
+        });
+
+        if (existingOutOfOffice) {
+            return response(400, null, "hari ini adalah jadwal dinas", res);
+        }
+
         const created = await prisma.attendance.create({
             data: {
                 user_id: targetUserId,
                 attendance_status: "Tidak Hadir",
-                attendance_date: new Date(attendance_date)
+                attendance_date: searchDate
             }
         });
 
@@ -224,12 +343,49 @@ const patchCheckin = async (req, res, next) => {
         const dateStr = date || req.query.date || new Date().toLocaleDateString('en-CA');
         const attendance_date = new Date(dateStr);
 
+        // 1. Check if there is an existing attendance record on this date with "Cuti" or "Dinas Luar"
         let existing = await prisma.attendance.findFirst({
             where: {
                 user_id: userId,
                 attendance_date
             }
         });
+
+        if (existing) {
+            const status = (existing.attendance_status || '').toLowerCase();
+            if (status === 'cuti') {
+                return response(400, null, "hari ini adalah jadwal cuti", res);
+            }
+            if (status === 'dinas luar' || status === 'dinas') {
+                return response(400, null, "hari ini adalah jadwal dinas", res);
+            }
+        }
+
+        // 2. Check in leave table for approved leaves on this date
+        const existingLeave = await prisma.leave.findFirst({
+            where: {
+                user_id: userId,
+                leave_date: attendance_date,
+                leave_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
+            }
+        });
+
+        if (existingLeave) {
+            return response(400, null, "hari ini adalah jadwal cuti", res);
+        }
+
+        // 3. Check in out_of_office table for approved out-of-office on this date
+        const existingOutOfOffice = await prisma.out_of_office.findFirst({
+            where: {
+                user_id: userId,
+                out_of_office_date: attendance_date,
+                out_of_office_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
+            }
+        });
+
+        if (existingOutOfOffice) {
+            return response(400, null, "hari ini adalah jadwal dinas", res);
+        }
 
         const now = new Date();
         let status = attendance_status;

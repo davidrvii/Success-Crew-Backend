@@ -178,16 +178,31 @@ const getCrewUserDetail = async (req, res, next) => {
                 leave: {
                     select: {
                         leave_id: true,
+                        leave_desc: true,
                         leave_date: true,
+                        leave_status: true,
                     },
                     orderBy: { leave_date: 'desc' },
                 },
                 overtime: {
                     select: {
                         overtime_id: true,
+                        overtime_desc: true,
+                        overtime_date: true,
                         overtime_start: true,
+                        overtime_end: true,
+                        overtime_status: true,
                     },
                     orderBy: { overtime_start: 'desc' },
+                },
+                out_of_office: {
+                    select: {
+                        out_of_office_id: true,
+                        out_of_office_desc: true,
+                        out_of_office_date: true,
+                        out_of_office_status: true,
+                    },
+                    orderBy: { out_of_office_date: 'desc' },
                 },
             },
         })
@@ -213,6 +228,11 @@ const getCrewUserDetail = async (req, res, next) => {
             return date.getFullYear() === currentYear;
         });
 
+        const outOfOfficesThisYear = user.out_of_office.filter(o => {
+            const date = new Date(o.out_of_office_date);
+            return date.getFullYear() === currentYear;
+        });
+
         const total_attendance = attendancesThisYear.filter(a => {
             const status = (a.attendance_status || '').toLowerCase();
             return status === 'hadir' || status === 'telat';
@@ -225,6 +245,56 @@ const getCrewUserDetail = async (req, res, next) => {
 
         const total_leave = leavesThisYear.length;
         const total_overtime = overtimesThisYear.length;
+        const total_out_of_office = outOfOfficesThisYear.length;
+
+        const attendanceHistoryList = user.attendance.map(a => ({
+            id: a.attendance_id,
+            type: 'attendance',
+            date: a.attendance_date,
+            status: a.attendance_status,
+            description: null,
+            details: {
+                attendance_in: a.attendance_in,
+                attendance_out: a.attendance_out
+            }
+        }));
+
+        const leaveHistoryList = user.leave.map(l => ({
+            id: l.leave_id,
+            type: 'leave',
+            date: l.leave_date,
+            status: l.leave_status,
+            description: l.leave_desc,
+            details: {}
+        }));
+
+        const overtimeHistoryList = user.overtime.map(o => ({
+            id: o.overtime_id,
+            type: 'overtime',
+            date: o.overtime_date || o.overtime_start,
+            status: o.overtime_status,
+            description: o.overtime_desc,
+            details: {
+                overtime_start: o.overtime_start,
+                overtime_end: o.overtime_end
+            }
+        }));
+
+        const outOfOfficeHistoryList = user.out_of_office.map(o => ({
+            id: o.out_of_office_id,
+            type: 'out_of_office',
+            date: o.out_of_office_date,
+            status: o.out_of_office_status,
+            description: o.out_of_office_desc,
+            details: {}
+        }));
+
+        const combinedHistory = [
+            ...attendanceHistoryList,
+            ...leaveHistoryList,
+            ...overtimeHistoryList,
+            ...outOfOfficeHistoryList
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         const result = {
             user_id: user.user_id,
@@ -244,9 +314,12 @@ const getCrewUserDetail = async (req, res, next) => {
             total_late,
             total_leave,
             total_overtime,
+            total_out_of_office,
+            history: combinedHistory,
             attendance: user.attendance,
             leave: user.leave.map(l => ({ leave_id: l.leave_id })),
             overtime: user.overtime.map(o => ({ overtime_id: o.overtime_id })),
+            out_of_office: user.out_of_office.map(o => ({ out_of_office_id: o.out_of_office_id }))
         };
 
         return response(200, { userCrew: result }, 'Get Crew User Detail Success', res)

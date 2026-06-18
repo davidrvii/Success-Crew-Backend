@@ -170,6 +170,47 @@ Authorization: Bearer <token>
     "total_late": 10,
     "total_leave": 5,
     "total_overtime": 20,
+    "total_out_of_office": 2,
+    "history": [
+      {
+        "id": 1,
+        "type": "attendance",
+        "date": "2026-06-17T00:00:00.000Z",
+        "status": "Hadir",
+        "description": null,
+        "details": {
+          "attendance_in": "2026-06-17T08:00:00.000Z",
+          "attendance_out": "2026-06-17T17:00:00.000Z"
+        }
+      },
+      {
+        "id": 2,
+        "type": "overtime",
+        "date": "2026-06-16T00:00:00.000Z",
+        "status": "APPROVED",
+        "description": "Lembur pekerjaan X",
+        "details": {
+          "overtime_start": "2026-06-16T18:00:00.000Z",
+          "overtime_end": "2026-06-16T21:00:00.000Z"
+        }
+      },
+      {
+        "id": 1,
+        "type": "out_of_office",
+        "date": "2026-06-15T00:00:00.000Z",
+        "status": "APPROVED",
+        "description": "Dinas Luar Client Y",
+        "details": {}
+      },
+      {
+        "id": 1,
+        "type": "leave",
+        "date": "2026-06-14T00:00:00.000Z",
+        "status": "APPROVED",
+        "description": "Acara keluarga",
+        "details": {}
+      }
+    ],
     "attendance": [
       {
         "attendance_id": 1,
@@ -186,7 +227,12 @@ Authorization: Bearer <token>
     ],
     "overtime": [
       {
-        "overtime_id": 1
+        "overtime_id": 2
+      }
+    ],
+    "out_of_office": [
+      {
+        "out_of_office_id": 1
       }
     ]
   }
