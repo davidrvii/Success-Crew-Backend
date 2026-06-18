@@ -26,29 +26,28 @@ model office {
 }
 
 model user {
-  user_id         Int            @id @default(autoincrement())
+  user_id         Int             @id @default(autoincrement())
   office_id       Int
   role_id         Int
-  user_name       String         @db.VarChar
-  user_email      String         @unique @db.VarChar
-  user_password   String         @db.VarChar
-  user_phone      String?        @db.VarChar
-  user_photo      String?        @db.VarChar
-  user_birth      DateTime?      @db.Date
-  start_work      DateTime?      @db.Date
-  end_work        DateTime?      @db.Date
-  crew_status     String?        @db.VarChar
-  contract_status String?        @db.VarChar
-  created_at      DateTime       @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
-  
-  office          office         @relation(fields: [office_id], references: [office_id], onDelete: NoAction, onUpdate: NoAction)
-  role            role           @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
+  user_name       String          @db.VarChar
+  user_email      String          @unique @db.VarChar
+  user_password   String          @db.VarChar
+  user_phone      String?         @db.VarChar
+  user_photo      String?         @db.VarChar
+  user_birth      DateTime?       @db.Date
+  start_work      DateTime?       @db.Date
+  end_work        DateTime?       @db.Date
+  crew_status     String?         @db.VarChar
+  contract_status String?         @db.VarChar
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
   attendance      attendance[]
-  notification    notification[]
   leave           leave[]
-  overtime        overtime[]
+  notification    notification[]
   out_of_office   out_of_office[]
+  overtime        overtime[]
+  office          office          @relation(fields: [office_id], references: [office_id], onDelete: NoAction, onUpdate: NoAction)
+  role            role            @relation(fields: [role_id], references: [role_id], onDelete: NoAction, onUpdate: NoAction)
   visit           visit[]
 }
 
@@ -60,21 +59,19 @@ model notification {
   is_read            Boolean  @default(false)
   created_at         DateTime @default(now()) @db.Timestamptz(6)
   updated_at         DateTime @default(now()) @db.Timestamptz(6)
-  
   user               user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model attendance {
-  attendance_id     Int             @id @default(autoincrement())
+  attendance_id     Int        @id @default(autoincrement())
   user_id           Int
-  attendance_status String          @db.VarChar
-  attendance_in     DateTime?       @db.Timestamptz(6)
-  attendance_out    DateTime?       @db.Timestamptz(6)
-  attendance_date   DateTime        @db.Date
-  created_at        DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
-  
-  user              user            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  attendance_status String     @db.VarChar
+  attendance_in     DateTime?  @db.Timestamptz(6)
+  attendance_out    DateTime?  @db.Timestamptz(6)
+  attendance_date   DateTime   @db.Date
+  created_at        DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime   @default(now()) @db.Timestamptz(6)
+  user              user       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   overtime          overtime[]
 }
 
@@ -89,33 +86,30 @@ model overtime {
   overtime_status String     @db.VarChar
   created_at      DateTime   @default(now()) @db.Timestamptz(6)
   updated_at      DateTime   @default(now()) @db.Timestamptz(6)
-  
-  user            user       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   attendance      attendance @relation(fields: [attendance_id], references: [attendance_id], onDelete: Cascade, onUpdate: NoAction)
+  user            user       @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model leave {
-  leave_id      Int         @id @default(autoincrement())
-  user_id       Int
-  leave_desc    String      @db.VarChar
-  leave_date    DateTime    @db.Date
-  leave_status  String      @db.VarChar
-  created_at    DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime    @default(now()) @db.Timestamptz(6)
-  
-  user          user        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  leave_id     Int      @id @default(autoincrement())
+  user_id      Int
+  leave_desc   String   @db.VarChar
+  leave_date   DateTime @db.Date
+  leave_status String   @db.VarChar
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime @default(now()) @db.Timestamptz(6)
+  user         user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model out_of_office {
-  out_of_office_id     Int         @id @default(autoincrement())
+  out_of_office_id     Int      @id @default(autoincrement())
   user_id              Int
-  out_of_office_desc   String      @db.VarChar
-  out_of_office_date   DateTime    @db.Date
-  out_of_office_status String      @db.VarChar
-  created_at           DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at           DateTime    @default(now()) @db.Timestamptz(6)
-  
-  user                 user        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  out_of_office_desc   String   @db.VarChar
+  out_of_office_date   DateTime @db.Date
+  out_of_office_status String   @db.VarChar
+  created_at           DateTime @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime @default(now()) @db.Timestamptz(6)
+  user                 user     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model visitor {
@@ -140,12 +134,11 @@ model visit {
   visit_sales      String?         @db.VarChar
   created_at       DateTime        @default(now()) @db.Timestamptz(6)
   updated_at       DateTime        @default(now()) @db.Timestamptz(6)
-  
-  visitor          visitor         @relation(fields: [visitor_id], references: [visitor_id], onDelete: Cascade, onUpdate: NoAction)
-  user             user            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
   follow_up        follow_up[]
   product_sold     product_sold[]
   unit_serviced    unit_serviced[]
+  user             user            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  visitor          visitor         @relation(fields: [visitor_id], references: [visitor_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model follow_up {
@@ -155,7 +148,6 @@ model follow_up {
   follow_up_action String   @db.VarChar
   created_at       DateTime @default(now()) @db.Timestamptz(6)
   updated_at       DateTime @default(now()) @db.Timestamptz(6)
-  
   visit            visit    @relation(fields: [visit_id], references: [visit_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
@@ -168,7 +160,6 @@ model product_sold {
   product_sold_desc     String?  @db.VarChar
   created_at            DateTime @default(now()) @db.Timestamptz(6)
   updated_at            DateTime @default(now()) @db.Timestamptz(6)
-  
   visit                 visit    @relation(fields: [visit_id], references: [visit_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
@@ -182,6 +173,5 @@ model unit_serviced {
   unit_serviced_desc   String?  @db.VarChar
   created_at           DateTime @default(now()) @db.Timestamptz(6)
   updated_at           DateTime @default(now()) @db.Timestamptz(6)
-  
   visit                visit    @relation(fields: [visit_id], references: [visit_id], onDelete: Cascade, onUpdate: NoAction)
 }
