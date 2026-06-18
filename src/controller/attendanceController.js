@@ -282,6 +282,7 @@ const createNewAttendance = async (req, res, next) => {
             if (status === 'dinas luar' || status === 'dinas') {
                 return response(400, null, "hari ini adalah jadwal dinas", res);
             }
+            return response(409, {}, "Attendance record already exists for this date", res);
         }
 
         // 2. Check in leave table for approved leaves on this date
@@ -388,9 +389,15 @@ const patchCheckin = async (req, res, next) => {
         }
 
         const now = new Date();
+        const jakartaHour = Number(new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Jakarta',
+            hour: 'numeric',
+            hour12: false
+        }).format(now));
+
         let status = attendance_status;
         if (!status) {
-            if (now.getHours() >= 9) {
+            if (jakartaHour >= 9) {
                 status = 'Telat';
             } else {
                 status = 'Hadir';
@@ -447,6 +454,16 @@ const patchCheckout = async (req, res, next) => {
         });
 
         const now = new Date();
+        const jakartaHour = Number(new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Jakarta',
+            hour: 'numeric',
+            hour12: false
+        }).format(now));
+
+        const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(now);
+        if (dateStr === todayStr && jakartaHour < 17) {
+            return response(400, null, "Tidak dapat check out sebelum jam pulang", res);
+        }
 
         let resultRecord;
         if (existing) {

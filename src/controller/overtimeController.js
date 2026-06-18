@@ -174,6 +174,15 @@ const createNewOvertime = async (req, res, next) => {
 
         const created = await prisma.overtime.create({ data })
 
+        if (overtime_status && (overtime_status.toUpperCase() === 'APPROVED' || overtime_status.toUpperCase() === 'DITERIMA')) {
+            await prisma.attendance.update({
+                where: { attendance_id: resolvedAttendanceId },
+                data: {
+                    attendance_status: 'Lembur'
+                }
+            });
+        }
+
         const result = {
             user_id: created.user_id,
             attendance_id: created.attendance_id,
