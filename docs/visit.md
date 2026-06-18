@@ -59,6 +59,8 @@ Authorization: Bearer <token>
 ## Visit - Get Visit Statistics
 - Endpoint : `/visit/stats` (Aliases: `/visit/count/daily`, `/visit/count/weekly`, `/visit/rushhour`)
 - Method : `GET`
+- Request Query :
+  - `range` (optional): `this_week` (will filter data to only include this week from Monday to Saturday). If not specified, defaults to the last 7 days.
 - Response Success :
 ```json
 {
@@ -69,8 +71,8 @@ Authorization: Bearer <token>
     "call_in": 5,
     "chat_in": 10,
     "walk_in": 10,
-    "total_unit_service": 8,
-    "total_product_sold": 15
+    "unit_serviced": 8,
+    "product_sold": 15
   },
   "weeklyCount": [
     {
@@ -84,10 +86,6 @@ Authorization: Bearer <token>
     {
       "date": "2026-06-13",
       "total_visit": 8
-    },
-    {
-      "date": "2026-06-14",
-      "total_visit": 20
     },
     {
       "date": "2026-06-15",
@@ -134,10 +132,6 @@ Authorization: Bearer <token>
     {
       "hour": "16:00",
       "total_visit": 9
-    },
-    {
-      "hour": "17:00",
-      "total_visit": 7
     }
   ]
 }

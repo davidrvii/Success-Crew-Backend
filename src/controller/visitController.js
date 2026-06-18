@@ -61,14 +61,33 @@ const getVisitList = async (req, res, next) => {
 
 const getVisitStats = async (req, res, next) => {
     try {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
+        const { range } = req.query;
+        let startDate;
+        let endDate;
+
+        if (range === 'this_week') {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() + distanceToMonday);
+            startDate.setHours(0, 0, 0, 0);
+
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 5); // Saturday
+            endDate.setHours(23, 59, 59, 999);
+        } else {
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() - 6);
+            startDate.setHours(0, 0, 0, 0);
+        }
 
         const visits = await prisma.visit.findMany({
             where: {
                 created_at: {
-                    gte: sevenDaysAgo
+                    gte: startDate,
+                    ...(endDate ? { lte: endDate } : {})
                 }
             },
             select: {
@@ -85,7 +104,8 @@ const getVisitStats = async (req, res, next) => {
         const totalUnitService = await prisma.unit_serviced.count({
             where: {
                 created_at: {
-                    gte: sevenDaysAgo
+                    gte: startDate,
+                    ...(endDate ? { lte: endDate } : {})
                 }
             }
         });
@@ -93,7 +113,8 @@ const getVisitStats = async (req, res, next) => {
         const productSoldAggregate = await prisma.product_sold.aggregate({
             where: {
                 created_at: {
-                    gte: sevenDaysAgo
+                    gte: startDate,
+                    ...(endDate ? { lte: endDate } : {})
                 }
             },
             _sum: {
@@ -107,31 +128,47 @@ const getVisitStats = async (req, res, next) => {
             call_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'call in').length,
             chat_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'chat in').length,
             walk_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'walk in').length,
-            total_unit_service: totalUnitService,
-            total_product_sold: totalProductSold
+            unit_serviced: totalUnitService,
+            product_sold: totalProductSold
         };
 
         const weeklyCount = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toLocaleDateString('en-CA');
-            const count = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === dateStr).length;
+        if (range === 'this_week') {
+            for (let i = 0; i <= 5; i++) {
+                const d = new Date(startDate);
+                d.setDate(startDate.getDate() + i);
+                if (d.getDay() === 0) continue;
+                const dateStr = d.toLocaleDateString('en-CA');
+                const count = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === dateStr).length;
 
-            weeklyCount.push({
-                date: dateStr,
-                total_visit: count
-            });
+                weeklyCount.push({
+                    date: dateStr,
+                    total_visit: count
+                });
+            }
+        } else {
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                if (d.getDay() === 0) continue;
+                const dateStr = d.toLocaleDateString('en-CA');
+                const count = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === dateStr).length;
+
+                weeklyCount.push({
+                    date: dateStr,
+                    total_visit: count
+                });
+            }
         }
 
         const hourlyCounts = {};
-        for (let h = 9; h <= 17; h++) {
+        for (let h = 9; h <= 16; h++) {
             hourlyCounts[h] = 0;
         }
 
         visits.forEach(v => {
             const hour = new Date(v.created_at).getHours();
-            if (hour >= 9 && hour <= 17) {
+            if (hour >= 9 && hour <= 16) {
                 if (hourlyCounts[hour] !== undefined) {
                     hourlyCounts[hour]++;
                 }
