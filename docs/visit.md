@@ -163,7 +163,7 @@ Authorization: Bearer <token>
     "visitor_company": "Perusahaan A",
     "visit_type": "WALK_IN",
     "created_at": "2026-06-17T03:30:27.000Z",
-    "visit_interest": "Laptop gaming",
+    "visitor_interest": "Laptop gaming",
     "visit_status": "Follow Up",
     "visit_desc": "Ingin lihat stok dan promo",
     "user_name": "Sales A",
