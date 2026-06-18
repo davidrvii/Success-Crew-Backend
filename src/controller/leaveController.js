@@ -130,10 +130,23 @@ const createNewLeave = async (req, res, next) => {
             return response(400, null, 'Missing Required Field: leave_desc and leave_date are required', res)
         }
 
+        const searchDate = new Date(leave_date);
+
+        const existing = await prisma.leave.findFirst({
+            where: {
+                user_id: targetUserId,
+                leave_date: searchDate
+            }
+        });
+
+        if (existing) {
+            return response(409, null, 'Leave request already exists for this date', res);
+        }
+
         const data = {
             user_id: targetUserId,
             leave_desc,
-            leave_date: new Date(leave_date),
+            leave_date: searchDate,
             leave_status: leave_status || 'PENDING',
         }
 

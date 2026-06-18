@@ -151,10 +151,23 @@ const createNewOutOfOffice = async (req, res, next) => {
             return response(400, null, 'Missing Required Field: desc and date are required', res);
         }
 
+        const searchDate = new Date(dateVal);
+
+        const existing = await prisma.out_of_office.findFirst({
+            where: {
+                user_id: targetUserId,
+                out_of_office_date: searchDate
+            }
+        });
+
+        if (existing) {
+            return response(409, null, 'Out of office request already exists for this date', res);
+        }
+
         const data = {
             user_id: targetUserId,
             out_of_office_desc: desc,
-            out_of_office_date: new Date(dateVal),
+            out_of_office_date: searchDate,
             out_of_office_status: statusVal
         }
 

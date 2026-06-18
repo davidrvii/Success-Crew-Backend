@@ -132,6 +132,14 @@ Authorization: Bearer <token>
   }
 }
 ```
+- Response Error (Conflict) :
+  - **409 Conflict** (Out of office request already exists for this date):
+  ```json
+  {
+    "statusCode": 409,
+    "message": "Out of office request already exists for this date"
+  }
+  ```
 
 ## Patch Out of Office Status
 - Endpoint : `/outofoffice/update/:outOfOfficeId`

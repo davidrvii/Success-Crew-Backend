@@ -174,6 +174,28 @@ Authorization: Bearer <token>
   }
 }
 ```
+- Response Error (Conflict / Schedule Collision) :
+  - **409 Conflict** (Attendance already exists):
+  ```json
+  {
+    "statusCode": 409,
+    "message": "Attendance record already exists for this date"
+  }
+  ```
+  - **400 Bad Request** (Collision with approved leave / out of office):
+  ```json
+  {
+    "statusCode": 400,
+    "message": "hari ini adalah jadwal cuti"
+  }
+  ```
+  atau
+  ```json
+  {
+    "statusCode": 400,
+    "message": "hari ini adalah jadwal dinas"
+  }
+  ```
 
 ## Patch Checkin (Berdasarkan Tanggal)
 - Endpoint : `/attendance/checkin`
@@ -197,6 +219,21 @@ Authorization: Bearer <token>
   }
 }
 ```
+- Response Error (Schedule Collision) :
+  - **400 Bad Request** (Collision with approved leave / out of office):
+  ```json
+  {
+    "statusCode": 400,
+    "message": "hari ini adalah jadwal cuti"
+  }
+  ```
+  atau
+  ```json
+  {
+    "statusCode": 400,
+    "message": "hari ini adalah jadwal dinas"
+  }
+  ```
 
 ## Patch Checkout (Berdasarkan Tanggal)
 - Endpoint : `/attendance/checkout`

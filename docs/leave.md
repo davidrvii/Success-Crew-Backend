@@ -132,6 +132,14 @@ Authorization: Bearer <token>
   }
 }
 ```
+- Response Error (Conflict) :
+  - **409 Conflict** (Leave request already exists for this date):
+  ```json
+  {
+    "statusCode": 409,
+    "message": "Leave request already exists for this date"
+  }
+  ```
 
 ## Patch Leave Status
 - Endpoint : `/leave/update/:leaveId`
