@@ -20,7 +20,6 @@ const getAllUser = async (req, res, next) => {
                 role: {
                     select: {
                         role_name: true,
-                        role_division: true,
                     },
                 },
                 office: {
@@ -44,7 +43,6 @@ const getAllUser = async (req, res, next) => {
             start_work: u.start_work,
             end_work: u.end_work,
             role_name: u.role?.role_name ?? null,
-            role_division: u.role?.role_division ?? null,
             office_name: u.office?.office_name ?? null,
         }));
 
@@ -157,7 +155,6 @@ const getCrewUserDetail = async (req, res, next) => {
                 role: {
                     select: {
                         role_name: true,
-                        role_division: true,
                     },
                 },
                 office: {
@@ -308,7 +305,6 @@ const getCrewUserDetail = async (req, res, next) => {
             user_birth: user.user_birth,
             start_work: user.start_work,
             end_work: user.end_work,
-            role_division: user.role?.role_division ?? null,
             office_name: user.office?.office_name ?? null,
             total_attendance,
             total_late,
@@ -348,7 +344,6 @@ const getUserDetail = async (req, res, next) => {
                 role: {
                     select: {
                         role_name: true,
-                        role_division: true,
                     },
                 },
                 office: {
@@ -375,7 +370,6 @@ const getUserDetail = async (req, res, next) => {
             start_work: user.start_work,
             end_work: user.end_work,
             role_name: user.role?.role_name ?? null,
-            role_division: user.role?.role_division ?? null,
             office_name: user.office?.office_name ?? null,
         };
 
@@ -396,12 +390,16 @@ const createCrewUser = async (req, res, next) => {
         start_work,
         end_work,
         role_name,
-        role_division,
         office_name,
         user_password,
     } = req.body;
 
     try {
+        const pass = user_password || password;
+        if (!pass) {
+            return response(400, null, 'Missing Required Field: password is required', res);
+        }
+
         const existing = await prisma.user.findUnique({
             where: { user_email }
         });
@@ -413,14 +411,12 @@ const createCrewUser = async (req, res, next) => {
         let dbRole = await prisma.role.findFirst({
             where: {
                 role_name: role_name || 'Crew',
-                role_division: role_division || 'General',
             }
         });
         if (!dbRole) {
             dbRole = await prisma.role.create({
                 data: {
                     role_name: role_name || 'Crew',
-                    role_division: role_division || 'General'
                 }
             });
         }
@@ -439,7 +435,6 @@ const createCrewUser = async (req, res, next) => {
             });
         }
 
-        const pass = user_password || 'password123';
         const hashed = await hashPassword(pass);
 
         const newUser = await prisma.user.create({
@@ -468,8 +463,7 @@ const createCrewUser = async (req, res, next) => {
                 end_work: true,
                 role: {
                     select: {
-                        role_name: true,
-                        role_division: true
+                        role_name: true
                     }
                 },
                 office: {
@@ -491,7 +485,6 @@ const createCrewUser = async (req, res, next) => {
             start_work: newUser.start_work,
             end_work: newUser.end_work,
             role_name: newUser.role?.role_name ?? null,
-            role_division: newUser.role?.role_division ?? null,
             office_name: newUser.office?.office_name ?? null
         };
 
@@ -513,7 +506,6 @@ const updateCrewUser = async (req, res, next) => {
         start_work,
         end_work,
         role_name,
-        role_division,
         office_name
     } = req.body;
 
@@ -536,19 +528,13 @@ const updateCrewUser = async (req, res, next) => {
         if (start_work !== undefined) data.start_work = start_work ? new Date(start_work) : null;
         if (end_work !== undefined) data.end_work = end_work ? new Date(end_work) : null;
 
-        if (role_name !== undefined || role_division !== undefined) {
-            const currentRole = await prisma.role.findUnique({
-                where: { role_id: existing.role_id }
-            });
-            const rName = role_name !== undefined ? role_name : currentRole.role_name;
-            const rDiv = role_division !== undefined ? role_division : currentRole.role_division;
-
+        if (role_name !== undefined) {
             let dbRole = await prisma.role.findFirst({
-                where: { role_name: rName, role_division: rDiv }
+                where: { role_name }
             });
             if (!dbRole) {
                 dbRole = await prisma.role.create({
-                    data: { role_name: rName, role_division: rDiv }
+                    data: { role_name }
                 });
             }
             data.role_id = dbRole.role_id;
@@ -581,8 +567,7 @@ const updateCrewUser = async (req, res, next) => {
                 end_work: true,
                 role: {
                     select: {
-                        role_name: true,
-                        role_division: true
+                        role_name: true
                     }
                 },
                 office: {
@@ -604,7 +589,6 @@ const updateCrewUser = async (req, res, next) => {
             start_work: updated.start_work,
             end_work: updated.end_work,
             role_name: updated.role?.role_name ?? null,
-            role_division: updated.role?.role_division ?? null,
             office_name: updated.office?.office_name ?? null
         };
 
@@ -615,11 +599,11 @@ const updateCrewUser = async (req, res, next) => {
 }
 
 const userRegister = async (req, res, next) => {
-    const { 
-        office_id, 
-        role_id, 
-        user_name, 
-        user_email, 
+    const {
+        office_id,
+        role_id,
+        user_name,
+        user_email,
         user_password,
         user_phone,
         user_birth,
@@ -738,9 +722,9 @@ const userLogin = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
     const id = Number(req.params.userId)
-    const { 
-        user_name, 
-        user_email, 
+    const {
+        user_name,
+        user_email,
         user_phone,
         user_birth
     } = req.body
@@ -786,11 +770,11 @@ const updateUser = async (req, res, next) => {
 
 const updateUserPut = async (req, res, next) => {
     const id = Number(req.params.userId)
-    const { 
-        user_name, 
+    const {
+        user_name,
         crew_status,
         contract_status,
-        user_email, 
+        user_email,
         user_phone,
         user_birth,
         start_work,

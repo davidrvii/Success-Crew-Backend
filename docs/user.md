@@ -98,7 +98,6 @@ Authorization: Bearer <token>
       "start_work": "2026-01-01T00:00:00.000Z",
       "end_work": null,
       "role_name": "Sales",
-      "role_division": "Sales Division",
       "office_name": "Office A"
     }
   ]
@@ -164,7 +163,6 @@ Authorization: Bearer <token>
     "user_birth": "1995-10-24T00:00:00.000Z",
     "start_work": "2026-01-01T00:00:00.000Z",
     "end_work": null,
-    "role_division": "Sales Division",
     "office_name": "Office A",
     "total_attendance": 150,
     "total_late": 10,
@@ -260,7 +258,6 @@ Authorization: Bearer <token>
     "start_work": "2026-01-01T00:00:00.000Z",
     "end_work": null,
     "role_name": "Sales",
-    "role_division": "Sales Division",
     "office_name": "Office A"
   }
 }
@@ -277,12 +274,12 @@ Authorization: Bearer <token>
   "crew_status": "ACTIVE",
   "contract_status": "KONTRAK",
   "user_email": "ahmad@mail.com",
+  "password": "password123",
   "user_phone": "081234567891",
   "user_birth": "1996-11-25",
   "start_work": "2026-02-01",
   "end_work": null,
   "role_name": "Crew",
-  "role_division": "General",
   "office_name": "Main Office"
 }
 ```
@@ -302,7 +299,6 @@ Authorization: Bearer <token>
     "start_work": "2026-02-01T00:00:00.000Z",
     "end_work": null,
     "role_name": "Crew",
-    "role_division": "General",
     "office_name": "Main Office"
   }
 }
@@ -335,7 +331,6 @@ Authorization: Bearer <token>
     "start_work": "2026-02-01T00:00:00.000Z",
     "end_work": null,
     "role_name": "Crew",
-    "role_division": "General",
     "office_name": "Main Office"
   }
 }
