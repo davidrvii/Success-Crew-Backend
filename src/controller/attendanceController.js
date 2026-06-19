@@ -141,7 +141,10 @@ const getCrewAttendance = async (req, res, next) => {
             return status === 'telat';
         }).length;
 
-        const total_leave = leavesThisYear.length;
+        const total_leave = leavesThisYear.filter(l => {
+            const status = (l.leave_status || '').toLowerCase();
+            return status === 'approved' || status === 'diterima';
+        }).length;
         const total_overtime = overtimesThisYear.length;
         const total_out_of_office = outOfOfficesThisYear.filter(o => {
             const status = (o.out_of_office_status || '').toLowerCase();
