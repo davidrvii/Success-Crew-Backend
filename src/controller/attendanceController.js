@@ -139,7 +139,10 @@ const getCrewAttendance = async (req, res, next) => {
 
         const total_leave = leavesThisYear.length;
         const total_overtime = overtimesThisYear.length;
-        const total_out_of_office = outOfOfficesThisYear.length;
+        const total_out_of_office = outOfOfficesThisYear.filter(o => {
+            const status = (o.out_of_office_status || '').toLowerCase();
+            return status === 'approved' || status === 'diterima';
+        }).length;
         const total_attendance = attendanceCount + total_out_of_office;
 
         const attendanceHistoryList = user.attendance.map(a => ({
