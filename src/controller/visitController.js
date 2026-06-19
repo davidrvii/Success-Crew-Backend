@@ -103,27 +103,33 @@ const getVisitStats = async (req, res, next) => {
         const visitsToday = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === todayStr);
         const getNormalizedType = (type) => (type || '').toLowerCase().replace(/_/g, ' ').trim();
 
-        const totalUnitService = await prisma.unit_serviced.count({
-            where: {
-                created_at: {
-                    gte: startDate,
-                    ...(endDate ? { lte: endDate } : {})
-                }
-            }
-        });
-
-        const productSoldAggregate = await prisma.product_sold.aggregate({
+        const productSolds = await prisma.product_sold.findMany({
             where: {
                 created_at: {
                     gte: startDate,
                     ...(endDate ? { lte: endDate } : {})
                 }
             },
-            _sum: {
-                product_sold_quantity: true
+            select: {
+                product_sold_quantity: true,
+                created_at: true
             }
         });
-        const totalProductSold = productSoldAggregate._sum.product_sold_quantity || 0;
+
+        const unitServiceds = await prisma.unit_serviced.findMany({
+            where: {
+                created_at: {
+                    gte: startDate,
+                    ...(endDate ? { lte: endDate } : {})
+                }
+            },
+            select: {
+                created_at: true
+            }
+        });
+
+        const totalUnitService = unitServiceds.length;
+        const totalProductSold = productSolds.reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0);
 
         const dailyCount = {
             total_visit: visitsToday.length,
@@ -135,6 +141,9 @@ const getVisitStats = async (req, res, next) => {
         };
 
         const weeklyCount = [];
+        const product_sold_weekly = [];
+        const unit_service_weekly = [];
+
         if (range === 'this_week') {
             for (let i = 0; i <= 5; i++) {
                 const d = new Date(startDate);
@@ -146,6 +155,21 @@ const getVisitStats = async (req, res, next) => {
                 weeklyCount.push({
                     date: dateStr,
                     total_visit: count
+                });
+
+                const productSoldToday = productSolds.filter(p => new Date(p.created_at).toLocaleDateString('en-CA') === dateStr);
+                const totalProductSoldToday = productSoldToday.reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0);
+
+                const unitServicedToday = unitServiceds.filter(u => new Date(u.created_at).toLocaleDateString('en-CA') === dateStr).length;
+
+                product_sold_weekly.push({
+                    date: dateStr,
+                    total_product_sold: totalProductSoldToday
+                });
+
+                unit_service_weekly.push({
+                    date: dateStr,
+                    total_unit_service: unitServicedToday
                 });
             }
         } else {
@@ -159,6 +183,21 @@ const getVisitStats = async (req, res, next) => {
                 weeklyCount.push({
                     date: dateStr,
                     total_visit: count
+                });
+
+                const productSoldToday = productSolds.filter(p => new Date(p.created_at).toLocaleDateString('en-CA') === dateStr);
+                const totalProductSoldToday = productSoldToday.reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0);
+
+                const unitServicedToday = unitServiceds.filter(u => new Date(u.created_at).toLocaleDateString('en-CA') === dateStr).length;
+
+                product_sold_weekly.push({
+                    date: dateStr,
+                    total_product_sold: totalProductSoldToday
+                });
+
+                unit_service_weekly.push({
+                    date: dateStr,
+                    total_unit_service: unitServicedToday
                 });
             }
         }
@@ -189,6 +228,8 @@ const getVisitStats = async (req, res, next) => {
         return response(200, {
             dailyCount,
             weeklyCount,
+            product_sold_weekly,
+            unit_service_weekly,
             rushHour
         }, 'Get Visit Stats Success', res);
     } catch (error) {

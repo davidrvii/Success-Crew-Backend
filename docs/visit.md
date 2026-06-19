@@ -101,6 +101,58 @@ Authorization: Bearer <token>
       "total_visit": 25
     }
   ],
+  "product_sold_weekly": [
+    {
+      "date": "2026-06-11",
+      "total_product_sold": 5
+    },
+    {
+      "date": "2026-06-12",
+      "total_product_sold": 10
+    },
+    {
+      "date": "2026-06-13",
+      "total_product_sold": 4
+    },
+    {
+      "date": "2026-06-15",
+      "total_product_sold": 8
+    },
+    {
+      "date": "2026-06-16",
+      "total_product_sold": 12
+    },
+    {
+      "date": "2026-06-17",
+      "total_product_sold": 15
+    }
+  ],
+  "unit_service_weekly": [
+    {
+      "date": "2026-06-11",
+      "total_unit_service": 2
+    },
+    {
+      "date": "2026-06-12",
+      "total_unit_service": 4
+    },
+    {
+      "date": "2026-06-13",
+      "total_unit_service": 1
+    },
+    {
+      "date": "2026-06-15",
+      "total_unit_service": 3
+    },
+    {
+      "date": "2026-06-16",
+      "total_unit_service": 5
+    },
+    {
+      "date": "2026-06-17",
+      "total_unit_service": 8
+    }
+  ],
   "rushHour": [
     {
       "hour": "09:00",
