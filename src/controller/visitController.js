@@ -229,7 +229,7 @@ const getVisitDetail = async (req, res, next) => {
             visit_interest: visit.visitor_interest,
             visit_status: visit.visit_status,
             visit_desc: visit.visit_desc,
-            user_name: visit.user?.user_name || null,
+            visit_sales: visit.visit_sales || null,
             "Follow UP": (visit.follow_up || []).map(f => ({
                 follow_up_id: f.follow_up_id,
                 follow_up_status: f.follow_up_status,

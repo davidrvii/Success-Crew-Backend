@@ -160,7 +160,7 @@ Authorization: Bearer <token>
     "visitor_interest": "Laptop gaming",
     "visit_status": "Follow Up",
     "visit_desc": "Ingin lihat stok dan promo",
-    "user_name": "Sales A",
+    "visit_sales": "Sales A",
     "Follow UP": [
       {
         "follow_up_id": 1,
