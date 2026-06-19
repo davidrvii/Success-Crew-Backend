@@ -41,7 +41,7 @@ const createFollowUp = async (req, res, next) => {
 
         await prisma.visit.update({
             where: { visit_id: Number(visit_id) },
-            data: { visitor_status: follow_up_status }
+            data: { visit_status: follow_up_status }
         });
 
         const result = {
@@ -86,7 +86,7 @@ const updateFollowUpPut = async (req, res, next) => {
             if (lastFollowUp && lastFollowUp.follow_up_id === followUpId) {
                 await prisma.visit.update({
                     where: { visit_id: existing.visit_id },
-                    data: { visitor_status: follow_up_status }
+                    data: { visit_status: follow_up_status }
                 });
             }
         }
@@ -126,7 +126,7 @@ const deleteFollowUp = async (req, res, next) => {
         if (lastFollowUp) {
             await prisma.visit.update({
                 where: { visit_id: deleted.visit_id },
-                data: { visitor_status: lastFollowUp.follow_up_status }
+                data: { visit_status: lastFollowUp.follow_up_status }
             });
         }
 
@@ -184,7 +184,7 @@ const createVisitFollowUp = async (req, res, next) => {
 
         await prisma.visit.update({
             where: { visit_id: visitId },
-            data: { visitor_status: follow_up_status },
+            data: { visit_status: follow_up_status },
         })
 
         return response(
@@ -229,7 +229,7 @@ const updateVisitFollowUp = async (req, res, next) => {
             if (lastFollowUp && lastFollowUp.follow_up_id === followUpId) {
                 await prisma.visit.update({
                     where: { visit_id: visitId },
-                    data: { visitor_status: follow_up_status },
+                    data: { visit_status: follow_up_status },
                 })
             }
         }
@@ -261,7 +261,7 @@ const deleteVisitFollowUp = async (req, res, next) => {
         if (lastFollowUp) {
             await prisma.visit.update({
                 where: { visit_id: deleted.visit_id },
-                data: { visitor_status: lastFollowUp.follow_up_status },
+                data: { visit_status: lastFollowUp.follow_up_status },
             });
         }
 
