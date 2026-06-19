@@ -141,8 +141,8 @@ const getVisitStats = async (req, res, next) => {
         };
 
         const weeklyCount = [];
-        const product_sold_weekly = [];
-        const unit_service_weekly = [];
+        const productSoldWeekly = [];
+        const unitServiceWeekly = [];
 
         if (range === 'this_week') {
             for (let i = 0; i <= 5; i++) {
@@ -162,14 +162,14 @@ const getVisitStats = async (req, res, next) => {
 
                 const unitServicedToday = unitServiceds.filter(u => new Date(u.created_at).toLocaleDateString('en-CA') === dateStr).length;
 
-                product_sold_weekly.push({
+                productSoldWeekly.push({
                     date: dateStr,
-                    total_product_sold: totalProductSoldToday
+                    totalProductSold: totalProductSoldToday
                 });
 
-                unit_service_weekly.push({
+                unitServiceWeekly.push({
                     date: dateStr,
-                    total_unit_service: unitServicedToday
+                    totalUnitService: unitServicedToday
                 });
             }
         } else {
@@ -190,14 +190,14 @@ const getVisitStats = async (req, res, next) => {
 
                 const unitServicedToday = unitServiceds.filter(u => new Date(u.created_at).toLocaleDateString('en-CA') === dateStr).length;
 
-                product_sold_weekly.push({
+                productSoldWeekly.push({
                     date: dateStr,
-                    total_product_sold: totalProductSoldToday
+                    totalProductSold: totalProductSoldToday
                 });
 
-                unit_service_weekly.push({
+                unitServiceWeekly.push({
                     date: dateStr,
-                    total_unit_service: unitServicedToday
+                    totalUnitService: unitServicedToday
                 });
             }
         }
@@ -228,8 +228,8 @@ const getVisitStats = async (req, res, next) => {
         return response(200, {
             dailyCount,
             weeklyCount,
-            product_sold_weekly,
-            unit_service_weekly,
+            productSoldWeekly,
+            unitServiceWeekly,
             rushHour
         }, 'Get Visit Stats Success', res);
     } catch (error) {

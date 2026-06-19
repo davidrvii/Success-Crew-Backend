@@ -101,7 +101,7 @@ Authorization: Bearer <token>
       "total_visit": 25
     }
   ],
-  "product_sold_weekly": [
+  "productSoldWeekly": [
     {
       "date": "2026-06-11",
       "total_product_sold": 5
@@ -127,7 +127,7 @@ Authorization: Bearer <token>
       "total_product_sold": 15
     }
   ],
-  "unit_service_weekly": [
+  "unitServiceWeekly": [
     {
       "date": "2026-06-11",
       "total_unit_service": 2
