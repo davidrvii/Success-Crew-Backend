@@ -18,6 +18,7 @@ const getAllVisit = async (req, res, next) => {
             visitor_name: v.visitor?.visitor_name ?? null,
             visitor_phone: v.visitor?.visitor_phone ?? null,
             visitory_category: v.visitor?.visitor_category ?? null,
+            visitor_category: v.visitor?.visitor_category ?? null,
             visitor_company: v.visitor?.visitor_company ?? null,
             visit_type: v.visit_type,
             created_at: v.created_at,
@@ -50,6 +51,7 @@ const getVisitList = async (req, res, next) => {
             visit_type: v.visit_type,
             visitor_category: v.visitor?.visitor_category ?? null,
             visit_status: v.visit_status,
+            visit_sales: v.visit_sales,
             created_at: v.created_at
         }));
 

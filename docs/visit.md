@@ -50,6 +50,7 @@ Authorization: Bearer <token>
       "visit_type": "WALK_IN",
       "visitor_category": "VIP",
       "visit_status": "NEW",
+      "visit_sales": "Sales A",
       "created_at": "2026-06-17T03:30:27.000Z"
     }
   ]
