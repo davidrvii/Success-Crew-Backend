@@ -230,7 +230,7 @@ const getCrewUserDetail = async (req, res, next) => {
             return date.getFullYear() === currentYear;
         });
 
-        const total_attendance = attendancesThisYear.filter(a => {
+        const attendanceCount = attendancesThisYear.filter(a => {
             const status = (a.attendance_status || '').toLowerCase();
             return status === 'hadir' || status === 'telat';
         }).length;
@@ -243,6 +243,7 @@ const getCrewUserDetail = async (req, res, next) => {
         const total_leave = leavesThisYear.length;
         const total_overtime = overtimesThisYear.length;
         const total_out_of_office = outOfOfficesThisYear.length;
+        const total_attendance = attendanceCount + total_out_of_office;
 
         const attendanceHistoryList = user.attendance.map(a => ({
             id: a.attendance_id,
