@@ -1,20 +1,37 @@
 const prisma = require('../utils/prisma')
 const response = require('../../response')
 
+const getDatesInRange = (startDate, endDate) => {
+    const dates = [];
+    let currentDate = new Date(startDate);
+    const lastDate = new Date(endDate);
+    
+    currentDate.setHours(0,0,0,0);
+    lastDate.setHours(0,0,0,0);
+
+    while (currentDate <= lastDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+};
+
 const getAllOutOfOffice = async (req, res, next) => {
     try {
         const outOfOffices = await prisma.out_of_office.findMany({
-            orderBy: { out_of_office_date: 'desc' },
+            orderBy: { out_of_office_start: 'desc' },
         })
 
         const result = outOfOffices.map(o => ({
             outofoffice_id: o.out_of_office_id,
             outofoffice_desc: o.out_of_office_desc,
-            outofoffice_date: o.out_of_office_date,
+            outofoffice_start: o.out_of_office_start,
+            outofoffice_end: o.out_of_office_end,
             outofoffice_status: o.out_of_office_status,
             out_of_office_id: o.out_of_office_id,
             out_of_office_desc: o.out_of_office_desc,
-            out_of_office_date: o.out_of_office_date,
+            out_of_office_start: o.out_of_office_start,
+            out_of_office_end: o.out_of_office_end,
             out_of_office_status: o.out_of_office_status
         }));
 
@@ -99,7 +116,7 @@ const getCrewOutOfOffice = async (req, res, next) => {
     try {
         const outOfOffices = await prisma.out_of_office.findMany({
             where: { user_id: userId },
-            orderBy: { out_of_office_date: 'desc' },
+            orderBy: { out_of_office_start: 'desc' },
         })
 
         return response(200, { crewOutOfOffices: outOfOffices }, 'Get Crew Out Of Office Success', res)
@@ -131,8 +148,10 @@ const createNewOutOfOffice = async (req, res, next) => {
         user_id, 
         outofoffice_desc, 
         out_of_office_desc, 
-        outofoffice_date, 
-        out_of_office_date, 
+        outofoffice_start, 
+        out_of_office_start, 
+        outofoffice_end, 
+        out_of_office_end, 
         outofoffice_status, 
         out_of_office_status 
     } = req.body;
@@ -144,30 +163,34 @@ const createNewOutOfOffice = async (req, res, next) => {
         }
 
         const desc = outofoffice_desc || out_of_office_desc;
-        const dateVal = outofoffice_date || out_of_office_date;
+        const startVal = outofoffice_start || out_of_office_start;
+        const endVal = outofoffice_end || out_of_office_end;
         const statusVal = outofoffice_status || out_of_office_status || 'PENDING';
 
-        if (!desc || !dateVal) {
-            return response(400, null, 'Missing Required Field: desc and date are required', res);
+        if (!desc || !startVal || !endVal) {
+            return response(400, null, 'Missing Required Field: desc, start, and end dates are required', res);
         }
 
-        const searchDate = new Date(dateVal);
+        const searchStart = new Date(startVal);
+        const searchEnd = new Date(endVal);
 
         const existing = await prisma.out_of_office.findFirst({
             where: {
                 user_id: targetUserId,
-                out_of_office_date: searchDate
+                out_of_office_start: { lte: searchEnd },
+                out_of_office_end: { gte: searchStart }
             }
         });
 
         if (existing) {
-            return response(409, null, 'Out of office request already exists for this date', res);
+            return response(409, null, 'Out of office request overlaps with an existing record for this user', res);
         }
 
         const data = {
             user_id: targetUserId,
             out_of_office_desc: desc,
-            out_of_office_date: searchDate,
+            out_of_office_start: searchStart,
+            out_of_office_end: searchEnd,
             out_of_office_status: statusVal
         }
 
@@ -176,10 +199,12 @@ const createNewOutOfOffice = async (req, res, next) => {
         const result = {
             user_id: created.user_id,
             outofoffice_desc: created.out_of_office_desc,
-            outofoffice_date: created.out_of_office_date,
+            outofoffice_start: created.out_of_office_start,
+            outofoffice_end: created.out_of_office_end,
             outofoffice_status: created.out_of_office_status,
             out_of_office_desc: created.out_of_office_desc,
-            out_of_office_date: created.out_of_office_date,
+            out_of_office_start: created.out_of_office_start,
+            out_of_office_end: created.out_of_office_end,
             out_of_office_status: created.out_of_office_status
         }
 
@@ -207,30 +232,33 @@ const updateOutOfOffice = async (req, res, next) => {
         }
 
         if (out_of_office_status && (out_of_office_status.toUpperCase() === 'APPROVED' || out_of_office_status.toUpperCase() === 'DITERIMA')) {
-            const existingAttendance = await prisma.attendance.findFirst({
-                where: {
-                    user_id: existing.user_id,
-                    attendance_date: existing.out_of_office_date,
-                }
-            });
-
-            if (!existingAttendance) {
-                await prisma.attendance.create({
-                    data: {
+            const dates = getDatesInRange(existing.out_of_office_start, existing.out_of_office_end);
+            for (const d of dates) {
+                const existingAttendance = await prisma.attendance.findFirst({
+                    where: {
                         user_id: existing.user_id,
-                        attendance_status: 'Dinas Luar',
-                        attendance_date: existing.out_of_office_date,
-                        attendance_in: null,
-                        attendance_out: null,
+                        attendance_date: d,
                     }
                 });
-            } else {
-                await prisma.attendance.update({
-                    where: { attendance_id: existingAttendance.attendance_id },
-                    data: {
-                        attendance_status: 'Dinas Luar',
-                    }
-                });
+
+                if (!existingAttendance) {
+                    await prisma.attendance.create({
+                        data: {
+                            user_id: existing.user_id,
+                            attendance_status: 'Dinas Luar',
+                            attendance_date: d,
+                            attendance_in: null,
+                            attendance_out: null,
+                        }
+                    });
+                } else {
+                    await prisma.attendance.update({
+                        where: { attendance_id: existingAttendance.attendance_id },
+                        data: {
+                            attendance_status: 'Dinas Luar',
+                        }
+                    });
+                }
             }
         }
 
@@ -256,7 +284,16 @@ const updateOutOfOffice = async (req, res, next) => {
 
 const updateOutOfOfficePut = async (req, res, next) => {
     const outOfOfficeId = Number(req.params.outOfOfficeId);
-    const { outofoffice_desc, out_of_office_desc, outofoffice_date, out_of_office_date, outofoffice_status, out_of_office_status } = req.body;
+    const { 
+        outofoffice_desc, 
+        out_of_office_desc, 
+        outofoffice_start, 
+        out_of_office_start, 
+        outofoffice_end, 
+        out_of_office_end, 
+        outofoffice_status, 
+        out_of_office_status 
+    } = req.body;
 
     try {
         const existing = await prisma.out_of_office.findUnique({
@@ -268,40 +305,46 @@ const updateOutOfOfficePut = async (req, res, next) => {
         }
 
         const desc = outofoffice_desc !== undefined ? outofoffice_desc : out_of_office_desc;
-        const dateVal = outofoffice_date !== undefined ? outofoffice_date : out_of_office_date;
+        const startVal = outofoffice_start !== undefined ? outofoffice_start : out_of_office_start;
+        const endVal = outofoffice_end !== undefined ? outofoffice_end : out_of_office_end;
         const statusVal = outofoffice_status !== undefined ? outofoffice_status : out_of_office_status;
 
         const data = {};
         if (desc !== undefined) data.out_of_office_desc = desc;
-        if (dateVal !== undefined) data.out_of_office_date = dateVal ? new Date(dateVal) : null;
+        if (startVal !== undefined) data.out_of_office_start = startVal ? new Date(startVal) : null;
+        if (endVal !== undefined) data.out_of_office_end = endVal ? new Date(endVal) : null;
         if (statusVal !== undefined) data.out_of_office_status = statusVal;
 
         if (statusVal && (statusVal.toUpperCase() === 'APPROVED' || statusVal.toUpperCase() === 'DITERIMA')) {
-            const checkDate = dateVal ? new Date(dateVal) : existing.out_of_office_date;
-            const existingAttendance = await prisma.attendance.findFirst({
-                where: {
-                    user_id: existing.user_id,
-                    attendance_date: checkDate
-                }
-            });
-
-            if (!existingAttendance) {
-                await prisma.attendance.create({
-                    data: {
+            const finalStart = startVal ? new Date(startVal) : existing.out_of_office_start;
+            const finalEnd = endVal ? new Date(endVal) : existing.out_of_office_end;
+            const dates = getDatesInRange(finalStart, finalEnd);
+            for (const d of dates) {
+                const existingAttendance = await prisma.attendance.findFirst({
+                    where: {
                         user_id: existing.user_id,
-                        attendance_status: 'Dinas Luar',
-                        attendance_date: checkDate,
-                        attendance_in: null,
-                        attendance_out: null
+                        attendance_date: d
                     }
                 });
-            } else {
-                await prisma.attendance.update({
-                    where: { attendance_id: existingAttendance.attendance_id },
-                    data: {
-                        attendance_status: 'Dinas Luar'
-                    }
-                });
+
+                if (!existingAttendance) {
+                    await prisma.attendance.create({
+                        data: {
+                            user_id: existing.user_id,
+                            attendance_status: 'Dinas Luar',
+                            attendance_date: d,
+                            attendance_in: null,
+                            attendance_out: null
+                        }
+                    });
+                } else {
+                    await prisma.attendance.update({
+                        where: { attendance_id: existingAttendance.attendance_id },
+                        data: {
+                            attendance_status: 'Dinas Luar'
+                        }
+                    });
+                }
             }
         }
 
@@ -312,10 +355,12 @@ const updateOutOfOfficePut = async (req, res, next) => {
 
         const result = {
             outofoffice_desc: updated.out_of_office_desc,
-            outofoffice_date: updated.out_of_office_date,
+            outofoffice_start: updated.out_of_office_start,
+            outofoffice_end: updated.out_of_office_end,
             outofoffice_status: updated.out_of_office_status,
             out_of_office_desc: updated.out_of_office_desc,
-            out_of_office_date: updated.out_of_office_date,
+            out_of_office_start: updated.out_of_office_start,
+            out_of_office_end: updated.out_of_office_end,
             out_of_office_status: updated.out_of_office_status
         };
 

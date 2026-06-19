@@ -94,7 +94,8 @@ model leave {
   leave_id     Int      @id @default(autoincrement())
   user_id      Int
   leave_desc   String   @db.VarChar
-  leave_date   DateTime @db.Date
+  leave_start  DateTime @db.Date
+  leave_end    DateTime @db.Date
   leave_status String   @db.VarChar
   created_at   DateTime @default(now()) @db.Timestamptz(6)
   updated_at   DateTime @default(now()) @db.Timestamptz(6)
@@ -105,7 +106,8 @@ model out_of_office {
   out_of_office_id     Int      @id @default(autoincrement())
   user_id              Int
   out_of_office_desc   String   @db.VarChar
-  out_of_office_date   DateTime @db.Date
+  out_of_office_start  DateTime @db.Date
+  out_of_office_end    DateTime @db.Date
   out_of_office_status String   @db.VarChar
   created_at           DateTime @default(now()) @db.Timestamptz(6)
   updated_at           DateTime @default(now()) @db.Timestamptz(6)

@@ -20,7 +20,8 @@ Authorization: Bearer <token>
     {
       "leave_id": 1,
       "leave_desc": "Acara keluarga penting di luar kota",
-      "leave_date": "2026-06-25T00:00:00.000Z",
+      "leave_start": "2026-06-25T00:00:00.000Z",
+      "leave_end": "2026-06-27T00:00:00.000Z",
       "leave_status": "PENDING"
     }
   ]
@@ -76,7 +77,8 @@ Authorization: Bearer <token>
       "leave_id": 1,
       "user_id": 10,
       "leave_desc": "Acara keluarga penting di luar kota",
-      "leave_date": "2026-06-25T00:00:00.000Z",
+      "leave_start": "2026-06-25T00:00:00.000Z",
+      "leave_end": "2026-06-27T00:00:00.000Z",
       "leave_status": "PENDING",
       "created_at": "2026-06-17T07:00:00.000Z",
       "updated_at": "2026-06-17T07:00:00.000Z"
@@ -98,7 +100,8 @@ Authorization: Bearer <token>
     "leave_id": 1,
     "user_id": 10,
     "leave_desc": "Acara keluarga penting di luar kota",
-    "leave_date": "2026-06-25T00:00:00.000Z",
+    "leave_start": "2026-06-25T00:00:00.000Z",
+    "leave_end": "2026-06-27T00:00:00.000Z",
     "leave_status": "PENDING",
     "created_at": "2026-06-17T07:00:00.000Z",
     "updated_at": "2026-06-17T07:00:00.000Z"
@@ -115,7 +118,8 @@ Authorization: Bearer <token>
 {
   "user_id": 10,
   "leave_desc": "Acara keluarga penting di luar kota",
-  "leave_date": "2026-06-25",
+  "leave_start": "2026-06-25",
+  "leave_end": "2026-06-27",
   "leave_status": "PENDING"
 }
 ```
@@ -127,17 +131,18 @@ Authorization: Bearer <token>
   "leaveCreated": {
     "user_id": 10,
     "leave_desc": "Acara keluarga penting di luar kota",
-    "leave_date": "2026-06-25T00:00:00.000Z",
+    "leave_start": "2026-06-25T00:00:00.000Z",
+    "leave_end": "2026-06-27T00:00:00.000Z",
     "leave_status": "PENDING"
   }
 }
 ```
-- Response Error (Conflict) :
-  - **409 Conflict** (Leave request already exists for this date):
+- Response Error (Conflict / Overlap) :
+  - **409 Conflict** (Leave request overlaps with an existing leave record for this user):
   ```json
   {
     "statusCode": 409,
-    "message": "Leave request already exists for this date"
+    "message": "Leave request overlaps with an existing leave record for this user"
   }
   ```
 
@@ -171,7 +176,8 @@ Authorization: Bearer <token>
 ```json
 {
   "leave_desc": "Acara keluarga penting di luar kota updated",
-  "leave_date": "2026-06-26",
+  "leave_start": "2026-06-26",
+  "leave_end": "2026-06-28",
   "leave_status": "APPROVED"
 }
 ```
@@ -182,7 +188,8 @@ Authorization: Bearer <token>
   "message": "Update Leave Success",
   "leaveUpdated": {
     "leave_desc": "Acara keluarga penting di luar kota updated",
-    "leave_date": "2026-06-26T00:00:00.000Z",
+    "leave_start": "2026-06-26T00:00:00.000Z",
+    "leave_end": "2026-06-28T00:00:00.000Z",
     "leave_status": "APPROVED"
   }
 }

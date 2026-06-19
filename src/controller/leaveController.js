@@ -1,14 +1,30 @@
 const prisma = require('../utils/prisma')
 const response = require('../../response')
 
+const getDatesInRange = (startDate, endDate) => {
+    const dates = [];
+    let currentDate = new Date(startDate);
+    const lastDate = new Date(endDate);
+    
+    currentDate.setHours(0,0,0,0);
+    lastDate.setHours(0,0,0,0);
+
+    while (currentDate <= lastDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+};
+
 const getAllLeave = async (req, res, next) => {
     try {
         const leaves = await prisma.leave.findMany({
-            orderBy: { leave_date: 'desc' },
+            orderBy: { leave_start: 'desc' },
             select: {
                 leave_id: true,
                 leave_desc: true,
-                leave_date: true,
+                leave_start: true,
+                leave_end: true,
                 leave_status: true
             }
         })
@@ -55,7 +71,7 @@ const getLeaveBasicById = async (req, res, next) => {
         })
 
         if (!leave) {
-            return response(404, null, 'Leave Not Found', res)
+            return response(404, null, 'Leave Found Success', res)
         }
 
         const unapprovedCount = await prisma.leave.count({
@@ -85,7 +101,7 @@ const getCrewLeave = async (req, res, next) => {
     try {
         const leaves = await prisma.leave.findMany({
             where: { user_id: userId },
-            orderBy: { leave_date: 'desc' },
+            orderBy: { leave_start: 'desc' },
         })
 
         return response(200, {crewLeaves: leaves}, 'Get Crew Leave Success', res)
@@ -116,7 +132,8 @@ const createNewLeave = async (req, res, next) => {
     const {
         user_id,
         leave_desc,
-        leave_date,
+        leave_start,
+        leave_end,
         leave_status,
     } = req.body
 
@@ -126,27 +143,30 @@ const createNewLeave = async (req, res, next) => {
             return response(401, null, "Unauthorized or Missing User ID", res);
         }
 
-        if (!leave_desc || !leave_date) {
-            return response(400, null, 'Missing Required Field: leave_desc and leave_date are required', res)
+        if (!leave_desc || !leave_start || !leave_end) {
+            return response(400, null, 'Missing Required Field: leave_desc, leave_start, and leave_end are required', res)
         }
 
-        const searchDate = new Date(leave_date);
+        const searchLeaveStart = new Date(leave_start);
+        const searchLeaveEnd = new Date(leave_end);
 
         const existing = await prisma.leave.findFirst({
             where: {
                 user_id: targetUserId,
-                leave_date: searchDate
+                leave_start: { lte: searchLeaveEnd },
+                leave_end: { gte: searchLeaveStart }
             }
         });
 
         if (existing) {
-            return response(409, null, 'Leave request already exists for this date', res);
+            return response(409, null, 'Leave request overlaps with an existing leave record for this user', res);
         }
 
         const data = {
             user_id: targetUserId,
             leave_desc,
-            leave_date: searchDate,
+            leave_start: searchLeaveStart,
+            leave_end: searchLeaveEnd,
             leave_status: leave_status || 'PENDING',
         }
 
@@ -155,7 +175,8 @@ const createNewLeave = async (req, res, next) => {
         const result = {
             user_id: created.user_id,
             leave_desc: created.leave_desc,
-            leave_date: created.leave_date,
+            leave_start: created.leave_start,
+            leave_end: created.leave_end,
             leave_status: created.leave_status
         }
 
@@ -183,30 +204,33 @@ const updateLeave = async (req, res, next) => {
         }
 
         if (leave_status && (leave_status.toUpperCase() === 'APPROVED' || leave_status.toUpperCase() === 'DITERIMA')) {
-            const existingAttendance = await prisma.attendance.findFirst({
-                where: {
-                    user_id: existing.user_id,
-                    attendance_date: existing.leave_date,
-                }
-            });
-
-            if (!existingAttendance) {
-                await prisma.attendance.create({
-                    data: {
+            const dates = getDatesInRange(existing.leave_start, existing.leave_end);
+            for (const d of dates) {
+                const existingAttendance = await prisma.attendance.findFirst({
+                    where: {
                         user_id: existing.user_id,
-                        attendance_status: 'Cuti',
-                        attendance_date: existing.leave_date,
-                        attendance_in: null,
-                        attendance_out: null,
+                        attendance_date: d,
                     }
                 });
-            } else {
-                await prisma.attendance.update({
-                    where: { attendance_id: existingAttendance.attendance_id },
-                    data: {
-                        attendance_status: 'Cuti',
-                    }
-                });
+
+                if (!existingAttendance) {
+                    await prisma.attendance.create({
+                        data: {
+                            user_id: existing.user_id,
+                            attendance_status: 'Cuti',
+                            attendance_date: d,
+                            attendance_in: null,
+                            attendance_out: null,
+                        }
+                    });
+                } else {
+                    await prisma.attendance.update({
+                        where: { attendance_id: existingAttendance.attendance_id },
+                        data: {
+                            attendance_status: 'Cuti',
+                        }
+                    });
+                }
             }
         }
 
@@ -230,7 +254,7 @@ const updateLeave = async (req, res, next) => {
 
 const updateLeavePut = async (req, res, next) => {
     const leaveId = Number(req.params.leaveId);
-    const { leave_desc, leave_date, leave_status } = req.body;
+    const { leave_desc, leave_start, leave_end, leave_status } = req.body;
 
     try {
         const existing = await prisma.leave.findUnique({
@@ -243,35 +267,40 @@ const updateLeavePut = async (req, res, next) => {
 
         const data = {};
         if (leave_desc !== undefined) data.leave_desc = leave_desc;
-        if (leave_date !== undefined) data.leave_date = leave_date ? new Date(leave_date) : null;
+        if (leave_start !== undefined) data.leave_start = leave_start ? new Date(leave_start) : null;
+        if (leave_end !== undefined) data.leave_end = leave_end ? new Date(leave_end) : null;
         if (leave_status !== undefined) data.leave_status = leave_status;
 
         if (leave_status && (leave_status.toUpperCase() === 'APPROVED' || leave_status.toUpperCase() === 'DITERIMA')) {
-            const checkDate = leave_date ? new Date(leave_date) : existing.leave_date;
-            const existingAttendance = await prisma.attendance.findFirst({
-                where: {
-                    user_id: existing.user_id,
-                    attendance_date: checkDate
-                }
-            });
-
-            if (!existingAttendance) {
-                await prisma.attendance.create({
-                    data: {
+            const finalStart = leave_start ? new Date(leave_start) : existing.leave_start;
+            const finalEnd = leave_end ? new Date(leave_end) : existing.leave_end;
+            const dates = getDatesInRange(finalStart, finalEnd);
+            for (const d of dates) {
+                const existingAttendance = await prisma.attendance.findFirst({
+                    where: {
                         user_id: existing.user_id,
-                        attendance_status: 'Cuti',
-                        attendance_date: checkDate,
-                        attendance_in: null,
-                        attendance_out: null
+                        attendance_date: d
                     }
                 });
-            } else {
-                await prisma.attendance.update({
-                    where: { attendance_id: existingAttendance.attendance_id },
-                    data: {
-                        attendance_status: 'Cuti'
-                    }
-                });
+
+                if (!existingAttendance) {
+                    await prisma.attendance.create({
+                        data: {
+                            user_id: existing.user_id,
+                            attendance_status: 'Cuti',
+                            attendance_date: d,
+                            attendance_in: null,
+                            attendance_out: null
+                        }
+                    });
+                } else {
+                    await prisma.attendance.update({
+                        where: { attendance_id: existingAttendance.attendance_id },
+                        data: {
+                            attendance_status: 'Cuti'
+                        }
+                    });
+                }
             }
         }
 
@@ -282,7 +311,8 @@ const updateLeavePut = async (req, res, next) => {
 
         const result = {
             leave_desc: updated.leave_desc,
-            leave_date: updated.leave_date,
+            leave_start: updated.leave_start,
+            leave_end: updated.leave_end,
             leave_status: updated.leave_status
         };
 

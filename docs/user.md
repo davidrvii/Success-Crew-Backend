@@ -198,7 +198,10 @@ Authorization: Bearer <token>
         "date": "2026-06-15T00:00:00.000Z",
         "status": "APPROVED",
         "description": "Dinas Luar Client Y",
-        "details": {}
+        "details": {
+          "out_of_office_start": "2026-06-15T00:00:00.000Z",
+          "out_of_office_end": "2026-06-17T00:00:00.000Z"
+        }
       },
       {
         "id": 1,
@@ -206,7 +209,10 @@ Authorization: Bearer <token>
         "date": "2026-06-14T00:00:00.000Z",
         "status": "APPROVED",
         "description": "Acara keluarga",
-        "details": {}
+        "details": {
+          "leave_start": "2026-06-14T00:00:00.000Z",
+          "leave_end": "2026-06-16T00:00:00.000Z"
+        }
       }
     ],
     "attendance": [

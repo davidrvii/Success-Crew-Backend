@@ -20,7 +20,8 @@ Authorization: Bearer <token>
     {
       "outofoffice_id": 1,
       "outofoffice_desc": "Dinas luar ke klien di Bandung",
-      "outofoffice_date": "2026-06-20T00:00:00.000Z",
+      "outofoffice_start": "2026-06-20T00:00:00.000Z",
+      "outofoffice_end": "2026-06-22T00:00:00.000Z",
       "outofoffice_status": "PENDING"
     }
   ]
@@ -76,7 +77,8 @@ Authorization: Bearer <token>
       "out_of_office_id": 1,
       "user_id": 10,
       "out_of_office_desc": "Dinas luar ke klien di Bandung",
-      "out_of_office_date": "2026-06-20T00:00:00.000Z",
+      "out_of_office_start": "2026-06-20T00:00:00.000Z",
+      "out_of_office_end": "2026-06-22T00:00:00.000Z",
       "out_of_office_status": "PENDING",
       "created_at": "2026-06-17T07:00:00.000Z",
       "updated_at": "2026-06-17T07:00:00.000Z"
@@ -98,7 +100,8 @@ Authorization: Bearer <token>
     "out_of_office_id": 1,
     "user_id": 10,
     "out_of_office_desc": "Dinas luar ke klien di Bandung",
-    "out_of_office_date": "2026-06-20T00:00:00.000Z",
+    "out_of_office_start": "2026-06-20T00:00:00.000Z",
+    "out_of_office_end": "2026-06-22T00:00:00.000Z",
     "out_of_office_status": "PENDING",
     "created_at": "2026-06-17T07:00:00.000Z",
     "updated_at": "2026-06-17T07:00:00.000Z"
@@ -115,7 +118,8 @@ Authorization: Bearer <token>
 {
   "user_id": 10,
   "outofoffice_desc": "Dinas luar ke klien di Bandung",
-  "outofoffice_date": "2026-06-20",
+  "outofoffice_start": "2026-06-20",
+  "outofoffice_end": "2026-06-22",
   "outofoffice_status": "PENDING"
 }
 ```
@@ -127,17 +131,18 @@ Authorization: Bearer <token>
   "outOfOfficeCreated": {
     "user_id": 10,
     "outofoffice_desc": "Dinas luar ke klien di Bandung",
-    "outofoffice_date": "2026-06-20T00:00:00.000Z",
+    "outofoffice_start": "2026-06-20T00:00:00.000Z",
+    "outofoffice_end": "2026-06-22T00:00:00.000Z",
     "outofoffice_status": "PENDING"
   }
 }
 ```
-- Response Error (Conflict) :
-  - **409 Conflict** (Out of office request already exists for this date):
+- Response Error (Conflict / Overlap) :
+  - **409 Conflict** (Out of office request overlaps with an existing record for this user):
   ```json
   {
     "statusCode": 409,
-    "message": "Out of office request already exists for this date"
+    "message": "Out of office request overlaps with an existing record for this user"
   }
   ```
 
@@ -171,7 +176,8 @@ Authorization: Bearer <token>
 ```json
 {
   "outofoffice_desc": "Dinas luar ke klien di Bandung updated",
-  "outofoffice_date": "2026-06-21",
+  "outofoffice_start": "2026-06-21",
+  "outofoffice_end": "2026-06-23",
   "outofoffice_status": "APPROVED"
 }
 ```
@@ -182,7 +188,8 @@ Authorization: Bearer <token>
   "message": "Update Out Of Office Success",
   "outOfOfficeUpdated": {
     "outofoffice_desc": "Dinas luar ke klien di Bandung updated",
-    "outofoffice_date": "2026-06-21T00:00:00.000Z",
+    "outofoffice_start": "2026-06-21T00:00:00.000Z",
+    "outofoffice_end": "2026-06-23T00:00:00.000Z",
     "outofoffice_status": "APPROVED"
   }
 }

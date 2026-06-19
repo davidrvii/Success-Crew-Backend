@@ -73,10 +73,11 @@ const getCrewAttendance = async (req, res, next) => {
                     select: {
                         leave_id: true,
                         leave_desc: true,
-                        leave_date: true,
+                        leave_start: true,
+                        leave_end: true,
                         leave_status: true
                     },
-                    orderBy: { leave_date: 'desc' }
+                    orderBy: { leave_start: 'desc' }
                 },
                 overtime: {
                     select: {
@@ -93,10 +94,11 @@ const getCrewAttendance = async (req, res, next) => {
                     select: {
                         out_of_office_id: true,
                         out_of_office_desc: true,
-                        out_of_office_date: true,
+                        out_of_office_start: true,
+                        out_of_office_end: true,
                         out_of_office_status: true
                     },
-                    orderBy: { out_of_office_date: 'desc' }
+                    orderBy: { out_of_office_start: 'desc' }
                 }
             }
         });
@@ -113,8 +115,9 @@ const getCrewAttendance = async (req, res, next) => {
         });
 
         const leavesThisYear = user.leave.filter(l => {
-            const date = new Date(l.leave_date);
-            return date.getFullYear() === currentYear;
+            const startYear = new Date(l.leave_start).getFullYear();
+            const endYear = new Date(l.leave_end).getFullYear();
+            return startYear === currentYear || endYear === currentYear;
         });
 
         const overtimesThisYear = user.overtime.filter(o => {
@@ -123,8 +126,9 @@ const getCrewAttendance = async (req, res, next) => {
         });
 
         const outOfOfficesThisYear = user.out_of_office.filter(o => {
-            const date = new Date(o.out_of_office_date);
-            return date.getFullYear() === currentYear;
+            const startYear = new Date(o.out_of_office_start).getFullYear();
+            const endYear = new Date(o.out_of_office_end).getFullYear();
+            return startYear === currentYear || endYear === currentYear;
         });
 
         const attendanceCount = attendancesThisYear.filter(a => {
@@ -160,10 +164,13 @@ const getCrewAttendance = async (req, res, next) => {
         const leaveHistoryList = user.leave.map(l => ({
             id: l.leave_id,
             type: 'leave',
-            date: l.leave_date,
+            date: l.leave_start,
             status: l.leave_status,
             description: l.leave_desc,
-            details: {}
+            details: {
+                leave_start: l.leave_start,
+                leave_end: l.leave_end
+            }
         }));
 
         const overtimeHistoryList = user.overtime.map(o => ({
@@ -181,10 +188,13 @@ const getCrewAttendance = async (req, res, next) => {
         const outOfOfficeHistoryList = user.out_of_office.map(o => ({
             id: o.out_of_office_id,
             type: 'out_of_office',
-            date: o.out_of_office_date,
+            date: o.out_of_office_start,
             status: o.out_of_office_status,
             description: o.out_of_office_desc,
-            details: {}
+            details: {
+                out_of_office_start: o.out_of_office_start,
+                out_of_office_end: o.out_of_office_end
+            }
         }));
 
         const combinedHistory = [
@@ -293,7 +303,8 @@ const createNewAttendance = async (req, res, next) => {
         const existingLeave = await prisma.leave.findFirst({
             where: {
                 user_id: targetUserId,
-                leave_date: searchDate,
+                leave_start: { lte: searchDate },
+                leave_end: { gte: searchDate },
                 leave_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
             }
         });
@@ -306,7 +317,8 @@ const createNewAttendance = async (req, res, next) => {
         const existingOutOfOffice = await prisma.out_of_office.findFirst({
             where: {
                 user_id: targetUserId,
-                out_of_office_date: searchDate,
+                out_of_office_start: { lte: searchDate },
+                out_of_office_end: { gte: searchDate },
                 out_of_office_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
             }
         });
@@ -370,7 +382,8 @@ const patchCheckin = async (req, res, next) => {
         const existingLeave = await prisma.leave.findFirst({
             where: {
                 user_id: userId,
-                leave_date: attendance_date,
+                leave_start: { lte: attendance_date },
+                leave_end: { gte: attendance_date },
                 leave_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
             }
         });
@@ -383,7 +396,8 @@ const patchCheckin = async (req, res, next) => {
         const existingOutOfOffice = await prisma.out_of_office.findFirst({
             where: {
                 user_id: userId,
-                out_of_office_date: attendance_date,
+                out_of_office_start: { lte: attendance_date },
+                out_of_office_end: { gte: attendance_date },
                 out_of_office_status: { in: ['APPROVED', 'DITERIMA', 'approved', 'diterima'] }
             }
         });
