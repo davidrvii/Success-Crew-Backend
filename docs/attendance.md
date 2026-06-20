@@ -50,6 +50,7 @@ Authorization: Bearer <token>
 - Endpoint : `/attendance/crew/:userId`
 - Method : `GET`
 - Auth : ✅
+> Note: `total_leave`, `total_overtime`, dan `total_out_of_office` hanya menghitung data pada tahun berjalan yang memiliki status `APPROVED` atau `DITERIMA`.
 - Response Success :
 ```json
 {

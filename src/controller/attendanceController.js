@@ -145,7 +145,10 @@ const getCrewAttendance = async (req, res, next) => {
             const status = (l.leave_status || '').toLowerCase();
             return status === 'approved' || status === 'diterima';
         }).length;
-        const total_overtime = overtimesThisYear.length;
+        const total_overtime = overtimesThisYear.filter(o => {
+            const status = (o.overtime_status || '').toLowerCase();
+            return status === 'approved' || status === 'diterima';
+        }).length;
         const total_out_of_office = outOfOfficesThisYear.filter(o => {
             const status = (o.out_of_office_status || '').toLowerCase();
             return status === 'approved' || status === 'diterima';
