@@ -22,7 +22,8 @@ Authorization: Bearer <token>
       "outofoffice_desc": "Dinas luar ke klien di Bandung",
       "outofoffice_start": "2026-06-20T00:00:00.000Z",
       "outofoffice_end": "2026-06-22T00:00:00.000Z",
-      "outofoffice_status": "PENDING"
+      "outofoffice_status": "PENDING",
+      "Crew": "David Revivaldy"
     }
   ]
 }
@@ -39,7 +40,8 @@ Authorization: Bearer <token>
   "outOfOffices": [
     {
       "outofoffice_id": 1,
-      "outofoffice_status": "PENDING"
+      "outofoffice_status": "PENDING",
+      "Crew": "David Revivaldy"
     }
   ],
   "total_unapproved": 1
@@ -58,7 +60,8 @@ Authorization: Bearer <token>
   "outOfOfficeBasic": {
     "outofoffice_id": 1,
     "outofoffice_status": "PENDING",
-    "total_unapproved": 1
+    "total_unapproved": 1,
+    "Crew": "David Revivaldy"
   }
 }
 ```
@@ -81,7 +84,8 @@ Authorization: Bearer <token>
       "out_of_office_end": "2026-06-22T00:00:00.000Z",
       "out_of_office_status": "PENDING",
       "created_at": "2026-06-17T07:00:00.000Z",
-      "updated_at": "2026-06-17T07:00:00.000Z"
+      "updated_at": "2026-06-17T07:00:00.000Z",
+      "Crew": "David Revivaldy"
     }
   ]
 }
@@ -104,7 +108,8 @@ Authorization: Bearer <token>
     "out_of_office_end": "2026-06-22T00:00:00.000Z",
     "out_of_office_status": "PENDING",
     "created_at": "2026-06-17T07:00:00.000Z",
-    "updated_at": "2026-06-17T07:00:00.000Z"
+    "updated_at": "2026-06-17T07:00:00.000Z",
+    "Crew": "David Revivaldy"
   }
 }
 ```

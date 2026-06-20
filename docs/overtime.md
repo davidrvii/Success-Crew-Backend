@@ -22,7 +22,8 @@ Authorization: Bearer <token>
       "overtime_desc": "Stock opname",
       "overtime_start": "2026-06-17T17:00:00.000Z",
       "overtime_end": "2026-06-17T20:00:00.000Z",
-      "overtime_status": "PENDING"
+      "overtime_status": "PENDING",
+      "Crew": "David Revivaldy"
     }
   ]
 }
@@ -39,7 +40,8 @@ Authorization: Bearer <token>
   "overtimes": [
     {
       "overtime_id": 1,
-      "overtime_status": "PENDING"
+      "overtime_status": "PENDING",
+      "Crew": "David Revivaldy"
     }
   ],
   "total_unapproved": 1
@@ -58,7 +60,8 @@ Authorization: Bearer <token>
   "overtimeBasic": {
     "overtime_id": 1,
     "overtime_status": "PENDING",
-    "total_unapproved": 1
+    "total_unapproved": 1,
+    "Crew": "David Revivaldy"
   }
 }
 ```
@@ -83,7 +86,8 @@ Authorization: Bearer <token>
       "overtime_end": "2026-06-17T20:00:00.000Z",
       "overtime_status": "PENDING",
       "created_at": "2026-06-17T10:00:00.000Z",
-      "updated_at": "2026-06-17T10:00:00.000Z"
+      "updated_at": "2026-06-17T10:00:00.000Z",
+      "Crew": "David Revivaldy"
     }
   ]
 }
@@ -108,7 +112,8 @@ Authorization: Bearer <token>
     "overtime_end": "2026-06-17T20:00:00.000Z",
     "overtime_status": "PENDING",
     "created_at": "2026-06-17T10:00:00.000Z",
-    "updated_at": "2026-06-17T10:00:00.000Z"
+    "updated_at": "2026-06-17T10:00:00.000Z",
+    "Crew": "David Revivaldy"
   }
 }
 ```

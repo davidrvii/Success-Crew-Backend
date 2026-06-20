@@ -22,7 +22,8 @@ Authorization: Bearer <token>
       "leave_desc": "Acara keluarga penting di luar kota",
       "leave_start": "2026-06-25T00:00:00.000Z",
       "leave_end": "2026-06-27T00:00:00.000Z",
-      "leave_status": "PENDING"
+      "leave_status": "PENDING",
+      "Crew": "David Revivaldy"
     }
   ]
 }
@@ -39,7 +40,8 @@ Authorization: Bearer <token>
   "leaves": [
     {
       "leave_id": 1,
-      "leave_status": "PENDING"
+      "leave_status": "PENDING",
+      "Crew": "David Revivaldy"
     }
   ],
   "total_unapproved": 1
@@ -58,7 +60,8 @@ Authorization: Bearer <token>
   "leaveBasic": {
     "leave_id": 1,
     "leave_status": "PENDING",
-    "total_unapproved": 1
+    "total_unapproved": 1,
+    "Crew": "David Revivaldy"
   }
 }
 ```
@@ -81,7 +84,8 @@ Authorization: Bearer <token>
       "leave_end": "2026-06-27T00:00:00.000Z",
       "leave_status": "PENDING",
       "created_at": "2026-06-17T07:00:00.000Z",
-      "updated_at": "2026-06-17T07:00:00.000Z"
+      "updated_at": "2026-06-17T07:00:00.000Z",
+      "Crew": "David Revivaldy"
     }
   ]
 }
@@ -104,7 +108,8 @@ Authorization: Bearer <token>
     "leave_end": "2026-06-27T00:00:00.000Z",
     "leave_status": "PENDING",
     "created_at": "2026-06-17T07:00:00.000Z",
-    "updated_at": "2026-06-17T07:00:00.000Z"
+    "updated_at": "2026-06-17T07:00:00.000Z",
+    "Crew": "David Revivaldy"
   }
 }
 ```
