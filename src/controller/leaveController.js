@@ -43,6 +43,7 @@ const getAllLeave = async (req, res, next) => {
 const getLeaveBasicAll = async (req, res, next) => {
     try {
         const leaves = await prisma.leave.findMany({
+            orderBy: { leave_start: 'desc' },
             select: {
                 leave_id: true,
                 leave_status: true,

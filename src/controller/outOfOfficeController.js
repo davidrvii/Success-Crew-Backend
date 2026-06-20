@@ -48,6 +48,7 @@ const getAllOutOfOffice = async (req, res, next) => {
 const getOutOfOfficeBasicAll = async (req, res, next) => {
     try {
         const outOfOffices = await prisma.out_of_office.findMany({
+            orderBy: { out_of_office_start: 'desc' },
             select: {
                 out_of_office_id: true,
                 out_of_office_status: true,

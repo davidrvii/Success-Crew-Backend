@@ -28,6 +28,7 @@ const getAllOvertime = async (req, res, next) => {
 const getOvertimeBasicAll = async (req, res, next) => {
     try {
         const overtimes = await prisma.overtime.findMany({
+            orderBy: { overtime_date: 'desc' },
             select: {
                 overtime_id: true,
                 overtime_status: true,
