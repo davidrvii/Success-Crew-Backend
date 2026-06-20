@@ -20,16 +20,21 @@ const getAllLeave = async (req, res, next) => {
     try {
         const leaves = await prisma.leave.findMany({
             orderBy: { leave_start: 'desc' },
-            select: {
-                leave_id: true,
-                leave_desc: true,
-                leave_start: true,
-                leave_end: true,
-                leave_status: true
+            include: {
+                user: { select: { user_name: true } }
             }
         })
 
-        return response(200, { leaves: leaves }, 'Get All Leave Success', res)
+        const result = leaves.map(l => ({
+            leave_id: l.leave_id,
+            leave_desc: l.leave_desc,
+            leave_start: l.leave_start,
+            leave_end: l.leave_end,
+            leave_status: l.leave_status,
+            Crew: l.user?.user_name || null
+        }))
+
+        return response(200, { leaves: result }, 'Get All Leave Success', res)
     } catch (error) {
         return next(error)
     }
@@ -40,7 +45,8 @@ const getLeaveBasicAll = async (req, res, next) => {
         const leaves = await prisma.leave.findMany({
             select: {
                 leave_id: true,
-                leave_status: true
+                leave_status: true,
+                user: { select: { user_name: true } }
             }
         })
 
@@ -49,8 +55,14 @@ const getLeaveBasicAll = async (req, res, next) => {
             return status !== 'approved' && status !== 'diterima';
         }).length;
 
+        const result = leaves.map(l => ({
+            leave_id: l.leave_id,
+            leave_status: l.leave_status,
+            Crew: l.user?.user_name || null
+        }))
+
         return response(200, {
-            leaves,
+            leaves: result,
             total_unapproved: unapprovedCount
         }, 'Get Leave Basic All Success', res)
     } catch (error) {
@@ -66,12 +78,13 @@ const getLeaveBasicById = async (req, res, next) => {
             where: { leave_id: leaveId },
             select: {
                 leave_id: true,
-                leave_status: true
+                leave_status: true,
+                user: { select: { user_name: true } }
             }
         })
 
         if (!leave) {
-            return response(404, null, 'Leave Found Success', res)
+            return response(404, null, 'Leave Not Found', res)
         }
 
         const unapprovedCount = await prisma.leave.count({
@@ -86,7 +99,8 @@ const getLeaveBasicById = async (req, res, next) => {
         const result = {
             leave_id: leave.leave_id,
             leave_status: leave.leave_status,
-            total_unapproved: unapprovedCount
+            total_unapproved: unapprovedCount,
+            Crew: leave.user?.user_name || null
         }
 
         return response(200, { leaveBasic: result }, 'Get Leave Basic Success', res)
@@ -102,9 +116,18 @@ const getCrewLeave = async (req, res, next) => {
         const leaves = await prisma.leave.findMany({
             where: { user_id: userId },
             orderBy: { leave_start: 'desc' },
+            include: {
+                user: { select: { user_name: true } }
+            }
         })
 
-        return response(200, {crewLeaves: leaves}, 'Get Crew Leave Success', res)
+        const result = leaves.map(l => ({
+            ...l,
+            Crew: l.user?.user_name || null,
+            user: undefined
+        }))
+
+        return response(200, { crewLeaves: result }, 'Get Crew Leave Success', res)
     } catch (error) {
         return next(error)
     }
@@ -116,13 +139,22 @@ const getLeaveDetail = async (req, res, next) => {
     try {
         const leave = await prisma.leave.findUnique({
             where: { leave_id: id },
+            include: {
+                user: { select: { user_name: true } }
+            }
         })
 
         if (!leave) {
             return response(404, null, 'Leave Not Found', res)
         }
 
-        return response(200, {leaveDetail: leave}, 'Get Leave Detail Success', res)
+        const result = {
+            ...leave,
+            Crew: leave.user?.user_name || null,
+            user: undefined
+        }
+
+        return response(200, { leaveDetail: result }, 'Get Leave Detail Success', res)
     } catch (error) {
         return next(error)
     }

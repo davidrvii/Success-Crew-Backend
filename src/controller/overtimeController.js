@@ -5,16 +5,21 @@ const getAllOvertime = async (req, res, next) => {
     try {
         const overtimes = await prisma.overtime.findMany({
             orderBy: { overtime_date: 'desc' },
-            select: {
-                overtime_id: true,
-                overtime_desc: true,
-                overtime_start: true,
-                overtime_end: true,
-                overtime_status: true
+            include: {
+                user: { select: { user_name: true } }
             }
         })
 
-        return response(200, { overtimes: overtimes }, 'Get All Overtime Success', res)
+        const result = overtimes.map(o => ({
+            overtime_id: o.overtime_id,
+            overtime_desc: o.overtime_desc,
+            overtime_start: o.overtime_start,
+            overtime_end: o.overtime_end,
+            overtime_status: o.overtime_status,
+            Crew: o.user?.user_name || null
+        }))
+
+        return response(200, { overtimes: result }, 'Get All Overtime Success', res)
     } catch (error) {
         return next(error)
     }
@@ -25,7 +30,8 @@ const getOvertimeBasicAll = async (req, res, next) => {
         const overtimes = await prisma.overtime.findMany({
             select: {
                 overtime_id: true,
-                overtime_status: true
+                overtime_status: true,
+                user: { select: { user_name: true } }
             }
         })
 
@@ -34,8 +40,14 @@ const getOvertimeBasicAll = async (req, res, next) => {
             return status !== 'approved' && status !== 'diterima';
         }).length;
 
+        const result = overtimes.map(o => ({
+            overtime_id: o.overtime_id,
+            overtime_status: o.overtime_status,
+            Crew: o.user?.user_name || null
+        }))
+
         return response(200, {
-            overtimes,
+            overtimes: result,
             total_unapproved: unapprovedCount
         }, 'Get Overtime Basic All Success', res)
     } catch (error) {
@@ -51,7 +63,8 @@ const getOvertimeBasicById = async (req, res, next) => {
             where: { overtime_id: overtimeId },
             select: {
                 overtime_id: true,
-                overtime_status: true
+                overtime_status: true,
+                user: { select: { user_name: true } }
             }
         })
 
@@ -71,7 +84,8 @@ const getOvertimeBasicById = async (req, res, next) => {
         const result = {
             overtime_id: overtime.overtime_id,
             overtime_status: overtime.overtime_status,
-            total_unapproved: unapprovedCount
+            total_unapproved: unapprovedCount,
+            Crew: overtime.user?.user_name || null
         }
 
         return response(200, { overtimeBasic: result }, 'Get Overtime Basic Success', res)
@@ -87,9 +101,18 @@ const getCrewOvertime = async (req, res, next) => {
         const overtimes = await prisma.overtime.findMany({
             where: { user_id: userId },
             orderBy: { overtime_date: 'desc' },
+            include: {
+                user: { select: { user_name: true } }
+            }
         })
 
-        return response( 200, {crewOvertimes: overtimes}, 'Get Crew Overtime Success', res)
+        const result = overtimes.map(o => ({
+            ...o,
+            Crew: o.user?.user_name || null,
+            user: undefined
+        }))
+
+        return response(200, { crewOvertimes: result }, 'Get Crew Overtime Success', res)
     } catch (error) {
         return next(error)
     }
@@ -101,13 +124,22 @@ const getOvertimeDetail = async (req, res, next) => {
     try {
         const overtime = await prisma.overtime.findUnique({
             where: { overtime_id: id },
+            include: {
+                user: { select: { user_name: true } }
+            }
         })
 
         if (!overtime) {
             return response(404, null, 'Overtime Not Found', res)
         }
 
-        return response(200, {overtimeDetail: overtime}, 'Get Overtime Detail Success', res)
+        const result = {
+            ...overtime,
+            Crew: overtime.user?.user_name || null,
+            user: undefined
+        }
+
+        return response(200, { overtimeDetail: result }, 'Get Overtime Detail Success', res)
     } catch (error) {
         return next(error)
     }

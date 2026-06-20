@@ -20,6 +20,9 @@ const getAllOutOfOffice = async (req, res, next) => {
     try {
         const outOfOffices = await prisma.out_of_office.findMany({
             orderBy: { out_of_office_start: 'desc' },
+            include: {
+                user: { select: { user_name: true } }
+            }
         })
 
         const result = outOfOffices.map(o => ({
@@ -32,7 +35,8 @@ const getAllOutOfOffice = async (req, res, next) => {
             out_of_office_desc: o.out_of_office_desc,
             out_of_office_start: o.out_of_office_start,
             out_of_office_end: o.out_of_office_end,
-            out_of_office_status: o.out_of_office_status
+            out_of_office_status: o.out_of_office_status,
+            Crew: o.user?.user_name || null
         }));
 
         return response(200, { outOfOffices: result }, 'Get All Out Of Office Success', res)
@@ -46,7 +50,8 @@ const getOutOfOfficeBasicAll = async (req, res, next) => {
         const outOfOffices = await prisma.out_of_office.findMany({
             select: {
                 out_of_office_id: true,
-                out_of_office_status: true
+                out_of_office_status: true,
+                user: { select: { user_name: true } }
             }
         });
 
@@ -59,7 +64,8 @@ const getOutOfOfficeBasicAll = async (req, res, next) => {
             outofoffice_id: o.out_of_office_id,
             outofoffice_status: o.out_of_office_status,
             out_of_office_id: o.out_of_office_id,
-            out_of_office_status: o.out_of_office_status
+            out_of_office_status: o.out_of_office_status,
+            Crew: o.user?.user_name || null
         }));
 
         return response(200, {
@@ -79,7 +85,8 @@ const getOutOfOfficeBasicById = async (req, res, next) => {
             where: { out_of_office_id: outOfOfficeId },
             select: {
                 out_of_office_id: true,
-                out_of_office_status: true
+                out_of_office_status: true,
+                user: { select: { user_name: true } }
             }
         });
 
@@ -101,7 +108,8 @@ const getOutOfOfficeBasicById = async (req, res, next) => {
             outofoffice_status: o.out_of_office_status,
             out_of_office_id: o.out_of_office_id,
             out_of_office_status: o.out_of_office_status,
-            total_unapproved: unapprovedCount
+            total_unapproved: unapprovedCount,
+            Crew: o.user?.user_name || null
         };
 
         return response(200, { outOfOfficeBasic: result }, 'Get Out Of Office Basic Success', res);
@@ -117,9 +125,18 @@ const getCrewOutOfOffice = async (req, res, next) => {
         const outOfOffices = await prisma.out_of_office.findMany({
             where: { user_id: userId },
             orderBy: { out_of_office_start: 'desc' },
+            include: {
+                user: { select: { user_name: true } }
+            }
         })
 
-        return response(200, { crewOutOfOffices: outOfOffices }, 'Get Crew Out Of Office Success', res)
+        const result = outOfOffices.map(o => ({
+            ...o,
+            Crew: o.user?.user_name || null,
+            user: undefined
+        }))
+
+        return response(200, { crewOutOfOffices: result }, 'Get Crew Out Of Office Success', res)
     } catch (error) {
         return next(error)
     }
@@ -131,13 +148,22 @@ const getOutOfOfficeDetail = async (req, res, next) => {
     try {
         const outOfOffice = await prisma.out_of_office.findUnique({
             where: { out_of_office_id: id },
+            include: {
+                user: { select: { user_name: true } }
+            }
         })
 
         if (!outOfOffice) {
             return response(404, null, 'Out Of Office Record Not Found', res)
         }
 
-        return response(200, { outOfOfficeDetail: outOfOffice }, 'Get Out Of Office Detail Success', res)
+        const result = {
+            ...outOfOffice,
+            Crew: outOfOffice.user?.user_name || null,
+            user: undefined
+        }
+
+        return response(200, { outOfOfficeDetail: result }, 'Get Out Of Office Detail Success', res)
     } catch (error) {
         return next(error)
     }
