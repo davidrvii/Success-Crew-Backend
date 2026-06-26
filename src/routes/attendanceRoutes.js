@@ -4,6 +4,7 @@ const { authentication , authorization } = require('../middleware/auth')
 
 router.get('/all', attendanceController.getAllAttendance)
 router.get('/basic', authentication, attendanceController.getAttendanceBasic)
+router.get('/crew/summary/:userId', authentication, attendanceController.getCrewAttendanceSummary)
 router.get('/crew/:userId', authentication, attendanceController.getCrewAttendance)
 router.get('/detail/:id', authentication, attendanceController.getAttendanceDetail)
 

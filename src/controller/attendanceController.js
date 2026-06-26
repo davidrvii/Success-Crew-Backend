@@ -51,6 +51,67 @@ const getAttendanceBasic = async (req, res, next) => {
     }
 }
 
+const calculateCrewStats = (user) => {
+    const currentYear = new Date().getFullYear();
+
+    const attendancesThisYear = user.attendance.filter(a => {
+        const date = new Date(a.attendance_date);
+        return date.getFullYear() === currentYear;
+    });
+
+    const leavesThisYear = user.leave.filter(l => {
+        const startYear = new Date(l.leave_start).getFullYear();
+        const endYear = new Date(l.leave_end).getFullYear();
+        return startYear === currentYear || endYear === currentYear;
+    });
+
+    const overtimesThisYear = user.overtime.filter(o => {
+        const date = new Date(o.overtime_start);
+        return date.getFullYear() === currentYear;
+    });
+
+    const outOfOfficesThisYear = user.out_of_office.filter(o => {
+        const startYear = new Date(o.out_of_office_start).getFullYear();
+        const endYear = new Date(o.out_of_office_end).getFullYear();
+        return startYear === currentYear || endYear === currentYear;
+    });
+
+    const attendanceCount = attendancesThisYear.filter(a => {
+        const status = (a.attendance_status || '').toLowerCase();
+        return status === 'hadir' || status === 'telat' || status === 'late';
+    }).length;
+
+    const total_late = attendancesThisYear.filter(a => {
+        const status = (a.attendance_status || '').toLowerCase();
+        return status === 'telat' || status === 'late';
+    }).length;
+
+    const total_leave = leavesThisYear.filter(l => {
+        const status = (l.leave_status || '').toLowerCase();
+        return status === 'approved' || status === 'diterima';
+    }).length;
+
+    const total_overtime = overtimesThisYear.filter(o => {
+        const status = (o.overtime_status || '').toLowerCase();
+        return status === 'approved' || status === 'diterima';
+    }).length;
+
+    const total_out_of_office = outOfOfficesThisYear.filter(o => {
+        const status = (o.out_of_office_status || '').toLowerCase();
+        return status === 'approved' || status === 'diterima';
+    }).length;
+
+    const total_attendance = attendanceCount + total_out_of_office;
+
+    return {
+        total_attendance,
+        total_late,
+        total_leave,
+        total_overtime,
+        total_out_of_office
+    };
+};
+
 const getCrewAttendance = async (req, res, next) => {
     const userId = Number(req.params.userId);
 
@@ -107,53 +168,7 @@ const getCrewAttendance = async (req, res, next) => {
             return response(404, null, 'User Not Found', res);
         }
 
-        const currentYear = new Date().getFullYear();
-
-        const attendancesThisYear = user.attendance.filter(a => {
-            const date = new Date(a.attendance_date);
-            return date.getFullYear() === currentYear;
-        });
-
-        const leavesThisYear = user.leave.filter(l => {
-            const startYear = new Date(l.leave_start).getFullYear();
-            const endYear = new Date(l.leave_end).getFullYear();
-            return startYear === currentYear || endYear === currentYear;
-        });
-
-        const overtimesThisYear = user.overtime.filter(o => {
-            const date = new Date(o.overtime_start);
-            return date.getFullYear() === currentYear;
-        });
-
-        const outOfOfficesThisYear = user.out_of_office.filter(o => {
-            const startYear = new Date(o.out_of_office_start).getFullYear();
-            const endYear = new Date(o.out_of_office_end).getFullYear();
-            return startYear === currentYear || endYear === currentYear;
-        });
-
-        const attendanceCount = attendancesThisYear.filter(a => {
-            const status = (a.attendance_status || '').toLowerCase();
-            return status === 'hadir' || status === 'telat';
-        }).length;
-
-        const total_late = attendancesThisYear.filter(a => {
-            const status = (a.attendance_status || '').toLowerCase();
-            return status === 'telat';
-        }).length;
-
-        const total_leave = leavesThisYear.filter(l => {
-            const status = (l.leave_status || '').toLowerCase();
-            return status === 'approved' || status === 'diterima';
-        }).length;
-        const total_overtime = overtimesThisYear.filter(o => {
-            const status = (o.overtime_status || '').toLowerCase();
-            return status === 'approved' || status === 'diterima';
-        }).length;
-        const total_out_of_office = outOfOfficesThisYear.filter(o => {
-            const status = (o.out_of_office_status || '').toLowerCase();
-            return status === 'approved' || status === 'diterima';
-        }).length;
-        const total_attendance = attendanceCount + total_out_of_office;
+        const stats = calculateCrewStats(user);
 
         const attendanceHistoryList = user.attendance.map(a => ({
             id: a.attendance_id,
@@ -211,11 +226,11 @@ const getCrewAttendance = async (req, res, next) => {
         ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         const result = {
-            total_attendance,
-            total_late,
-            total_leave,
-            total_overtime,
-            total_out_of_office,
+            total_attendance: stats.total_attendance,
+            total_late: stats.total_late,
+            total_leave: stats.total_leave,
+            total_overtime: stats.total_overtime,
+            total_out_of_office: stats.total_out_of_office,
             history: combinedHistory,
             attendance: user.attendance,
             leave: user.leave.map(l => ({ leave_id: l.leave_id })),
@@ -227,7 +242,64 @@ const getCrewAttendance = async (req, res, next) => {
     } catch (error) {
         return next(error);
     }
-}
+};
+
+const getCrewAttendanceSummary = async (req, res, next) => {
+    const userId = Number(req.params.userId);
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { user_id: userId },
+            select: {
+                user_id: true,
+                attendance: {
+                    select: {
+                        attendance_status: true,
+                        attendance_date: true
+                    }
+                },
+                leave: {
+                    select: {
+                        leave_start: true,
+                        leave_end: true,
+                        leave_status: true
+                    }
+                },
+                overtime: {
+                    select: {
+                        overtime_start: true,
+                        overtime_status: true
+                    }
+                },
+                out_of_office: {
+                    select: {
+                        out_of_office_start: true,
+                        out_of_office_end: true,
+                        out_of_office_status: true
+                    }
+                }
+            }
+        });
+
+        if (!user) {
+            return response(404, null, 'User Not Found', res);
+        }
+
+        const stats = calculateCrewStats(user);
+
+        const summary = {
+            present: stats.total_attendance,
+            late: stats.total_late,
+            leave: stats.total_leave,
+            overtime: stats.total_overtime,
+            outOfOffice: stats.total_out_of_office
+        };
+
+        return response(200, summary, 'Get Crew Attendance Summary Success', res);
+    } catch (error) {
+        return next(error);
+    }
+};
 
 const getAttendanceDetail = async (req, res, next) => {
     const id = Number(req.params.id)
@@ -583,6 +655,7 @@ module.exports = {
     getAllAttendance,
     getAttendanceBasic,
     getCrewAttendance,
+    getCrewAttendanceSummary,
     getAttendanceDetail,
     createNewAttendance,
     patchCheckin,

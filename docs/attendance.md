@@ -46,11 +46,29 @@ Authorization: Bearer <token>
 }
 ```
 
+## Get Crew Attendance Summary (By User)
+- Endpoint : `/attendance/crew/summary/:userId`
+- Method : `GET`
+- Auth : ✅
+> Note: `total_leave`, `total_overtime`, dan `total_out_of_office` hanya menghitung data pada tahun berjalan yang memiliki status `APPROVED` atau `DITERIMA`. status `total_late` dihitung dari data dengan status `Telat` atau `Late`.
+- Response Success :
+```json
+{
+  "statusCode": 200,
+  "message": "Get Crew Attendance Summary Success",
+  "present": 150,
+  "late": 5,
+  "leave": 3,
+  "overtime": 10,
+  "outOfOffice": 2
+}
+```
+
 ## Get Crew Attendance (By User)
 - Endpoint : `/attendance/crew/:userId`
 - Method : `GET`
 - Auth : ✅
-> Note: `total_leave`, `total_overtime`, dan `total_out_of_office` hanya menghitung data pada tahun berjalan yang memiliki status `APPROVED` atau `DITERIMA`.
+> Note: `total_leave`, `total_overtime`, dan `total_out_of_office` hanya menghitung data pada tahun berjalan yang memiliki status `APPROVED` atau `DITERIMA`. status `total_late` dihitung dari data dengan status `Telat` atau `Late`.
 - Response Success :
 ```json
 {
