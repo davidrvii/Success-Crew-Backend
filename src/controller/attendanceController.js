@@ -182,41 +182,56 @@ const getCrewAttendance = async (req, res, next) => {
             }
         }));
 
-        const leaveHistoryList = user.leave.map(l => ({
-            id: l.leave_id,
-            type: 'leave',
-            date: l.leave_start,
-            status: l.leave_status,
-            description: l.leave_desc,
-            details: {
-                leave_start: l.leave_start,
-                leave_end: l.leave_end
-            }
-        }));
+        const leaveHistoryList = user.leave
+            .filter(l => {
+                const status = (l.leave_status || '').toLowerCase();
+                return status === 'approved' || status === 'diterima';
+            })
+            .map(l => ({
+                id: l.leave_id,
+                type: 'leave',
+                date: l.leave_start,
+                status: l.leave_status,
+                description: l.leave_desc,
+                details: {
+                    leave_start: l.leave_start,
+                    leave_end: l.leave_end
+                }
+            }));
 
-        const overtimeHistoryList = user.overtime.map(o => ({
-            id: o.overtime_id,
-            type: 'overtime',
-            date: o.overtime_date || o.overtime_start,
-            status: o.overtime_status,
-            description: o.overtime_desc,
-            details: {
-                overtime_start: o.overtime_start,
-                overtime_end: o.overtime_end
-            }
-        }));
+        const overtimeHistoryList = user.overtime
+            .filter(o => {
+                const status = (o.overtime_status || '').toLowerCase();
+                return status === 'approved' || status === 'diterima';
+            })
+            .map(o => ({
+                id: o.overtime_id,
+                type: 'overtime',
+                date: o.overtime_date || o.overtime_start,
+                status: o.overtime_status,
+                description: o.overtime_desc,
+                details: {
+                    overtime_start: o.overtime_start,
+                    overtime_end: o.overtime_end
+                }
+            }));
 
-        const outOfOfficeHistoryList = user.out_of_office.map(o => ({
-            id: o.out_of_office_id,
-            type: 'out_of_office',
-            date: o.out_of_office_start,
-            status: o.out_of_office_status,
-            description: o.out_of_office_desc,
-            details: {
-                out_of_office_start: o.out_of_office_start,
-                out_of_office_end: o.out_of_office_end
-            }
-        }));
+        const outOfOfficeHistoryList = user.out_of_office
+            .filter(o => {
+                const status = (o.out_of_office_status || '').toLowerCase();
+                return status === 'approved' || status === 'diterima';
+            })
+            .map(o => ({
+                id: o.out_of_office_id,
+                type: 'out_of_office',
+                date: o.out_of_office_start,
+                status: o.out_of_office_status,
+                description: o.out_of_office_desc,
+                details: {
+                    out_of_office_start: o.out_of_office_start,
+                    out_of_office_end: o.out_of_office_end
+                }
+            }));
 
         const combinedHistory = [
             ...attendanceHistoryList,
