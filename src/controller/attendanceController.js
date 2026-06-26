@@ -86,10 +86,17 @@ const calculateCrewStats = (user) => {
         return status === 'telat' || status === 'late';
     }).length;
 
-    const total_leave = leavesThisYear.filter(l => {
-        const status = (l.leave_status || '').toLowerCase();
-        return status === 'approved' || status === 'diterima';
-    }).length;
+    const total_leave = leavesThisYear
+        .filter(l => {
+            const status = (l.leave_status || '').toLowerCase();
+            return status === 'approved' || status === 'diterima';
+        })
+        .reduce((sum, l) => {
+            const start = new Date(l.leave_start);
+            const end = new Date(l.leave_end);
+            const days = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            return sum + days;
+        }, 0);
 
     const total_overtime = overtimesThisYear.filter(o => {
         const status = (o.overtime_status || '').toLowerCase();
