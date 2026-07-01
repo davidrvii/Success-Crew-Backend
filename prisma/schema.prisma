@@ -130,6 +130,7 @@ model visit {
   visitor_id       Int
   user_id          Int
   visit_type       String?         @db.VarChar
+  visit_location   String?         @db.VarChar
   visit_status     String          @db.VarChar
   visitor_interest String          @db.VarChar
   visit_desc       String?         @db.VarChar

@@ -17,10 +17,10 @@ const getAllVisit = async (req, res, next) => {
         const result = visits.map(v => ({
             visitor_name: v.visitor?.visitor_name ?? null,
             visitor_phone: v.visitor?.visitor_phone ?? null,
-            visitory_category: v.visitor?.visitor_category ?? null,
             visitor_category: v.visitor?.visitor_category ?? null,
             visitor_company: v.visitor?.visitor_company ?? null,
             visit_type: v.visit_type,
+            visit_location: v.visit_location ?? null,
             created_at: v.created_at,
             interest: v.visitor_interest,
             visit_status: v.visit_status,
@@ -49,6 +49,7 @@ const getVisitList = async (req, res, next) => {
             visitor_name: v.visitor?.visitor_name ?? null,
             visitor_interest: v.visitor_interest,
             visit_type: v.visit_type,
+            visit_location: v.visit_location ?? null,
             visitor_category: v.visitor?.visitor_category ?? null,
             visit_status: v.visit_status,
             visit_sales: v.visit_sales,
@@ -61,177 +62,206 @@ const getVisitList = async (req, res, next) => {
     }
 }
 
-const getVisitStats = async (req, res, next) => {
-    try {
-        const { range } = req.query;
-        let startDate;
-        let endDate;
+/* ============================
+ * HELPER: Compute visit statistics
+ * @param {Object} options
+ * @param {string|null} options.range     - 'this_week' or undefined (last 7 days)
+ * @param {string|null} options.location  - 'bogor', 'cibubur', or null (all locations)
+ * ============================ */
+const computeVisitStats = async ({ range, location }) => {
+    let startDate;
+    let endDate;
 
-        if (range === 'this_week') {
-            const today = new Date();
-            const currentDay = today.getDay();
-            const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    if (range === 'this_week') {
+        const today = new Date();
+        const currentDay = today.getDay();
+        const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
 
-            startDate = new Date(today);
-            startDate.setDate(today.getDate() + distanceToMonday);
-            startDate.setHours(0, 0, 0, 0);
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() + distanceToMonday);
+        startDate.setHours(0, 0, 0, 0);
 
-            endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 5); // Saturday
-            endDate.setHours(23, 59, 59, 999);
-        } else {
-            startDate = new Date();
-            startDate.setDate(startDate.getDate() - 6);
-            startDate.setHours(0, 0, 0, 0);
-        }
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 5); // Saturday
+        endDate.setHours(23, 59, 59, 999);
+    } else {
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+    }
 
-        const visits = await prisma.visit.findMany({
+    const dateFilter = {
+        gte: startDate,
+        ...(endDate ? { lte: endDate } : {})
+    };
+
+    // Apply location filter (case-insensitive) if provided
+    const locationFilter = location
+        ? { visit_location: { equals: location, mode: 'insensitive' } }
+        : {};
+
+    const [visits, productSolds, unitServiceds] = await Promise.all([
+        prisma.visit.findMany({
             where: {
-                created_at: {
-                    gte: startDate,
-                    ...(endDate ? { lte: endDate } : {})
-                }
+                created_at: dateFilter,
+                ...locationFilter
             },
             select: {
                 visit_id: true,
                 visit_type: true,
                 created_at: true
             }
-        });
-
-        const todayStr = new Date().toLocaleDateString('en-CA');
-        const visitsToday = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === todayStr);
-        const getNormalizedType = (type) => (type || '').toLowerCase().replace(/_/g, ' ').trim();
-
-        const productSolds = await prisma.product_sold.findMany({
+        }),
+        prisma.product_sold.findMany({
             where: {
-                created_at: {
-                    gte: startDate,
-                    ...(endDate ? { lte: endDate } : {})
-                }
+                created_at: dateFilter,
+                ...(location ? {
+                    visit: {
+                        visit_location: { equals: location, mode: 'insensitive' }
+                    }
+                } : {})
             },
             select: {
                 product_sold_quantity: true,
                 created_at: true
             }
-        });
-
-        const unitServiceds = await prisma.unit_serviced.findMany({
+        }),
+        prisma.unit_serviced.findMany({
             where: {
-                created_at: {
-                    gte: startDate,
-                    ...(endDate ? { lte: endDate } : {})
-                }
+                created_at: dateFilter,
+                ...(location ? {
+                    visit: {
+                        visit_location: { equals: location, mode: 'insensitive' }
+                    }
+                } : {})
             },
             select: {
                 created_at: true
             }
-        });
+        })
+    ]);
 
-        const totalUnitService = unitServiceds.length;
-        const totalProductSold = productSolds.reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0);
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    const visitsToday = visits.filter(v =>
+        new Date(v.created_at).toLocaleDateString('en-CA') === todayStr
+    );
+    const productSoldsToday = productSolds.filter(p =>
+        new Date(p.created_at).toLocaleDateString('en-CA') === todayStr
+    );
+    const unitServicedsToday = unitServiceds.filter(u =>
+        new Date(u.created_at).toLocaleDateString('en-CA') === todayStr
+    );
 
-        const dailyCount = {
-            total_visit: visitsToday.length,
-            call_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'call in').length,
-            chat_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'chat in').length,
-            walk_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'walk in').length,
-            unit_serviced: totalUnitService,
-            product_sold: totalProductSold
-        };
+    const getNormalizedType = (type) =>
+        (type || '').toLowerCase().replace(/_/g, ' ').trim();
 
-        const weeklyCount = [];
-        const productSoldWeekly = [];
-        const unitServiceWeekly = [];
+    const dailyCount = {
+        total_visit: visitsToday.length,
+        call_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'call in').length,
+        chat_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'chat in').length,
+        walk_in: visitsToday.filter(v => getNormalizedType(v.visit_type) === 'walk in').length,
+        unit_serviced: unitServicedsToday.length,
+        product_sold: productSoldsToday.reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0)
+    };
 
+    // Build array of date strings (Mon-Sat) within the selected range
+    const buildDateRange = () => {
+        const dates = [];
         if (range === 'this_week') {
             for (let i = 0; i <= 5; i++) {
                 const d = new Date(startDate);
                 d.setDate(startDate.getDate() + i);
-                if (d.getDay() === 0) continue;
-                const dateStr = d.toLocaleDateString('en-CA');
-                const count = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === dateStr).length;
-
-                weeklyCount.push({
-                    date: dateStr,
-                    total_visit: count
-                });
-
-                const productSoldToday = productSolds.filter(p => new Date(p.created_at).toLocaleDateString('en-CA') === dateStr);
-                const totalProductSoldToday = productSoldToday.reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0);
-
-                const unitServicedToday = unitServiceds.filter(u => new Date(u.created_at).toLocaleDateString('en-CA') === dateStr).length;
-
-                productSoldWeekly.push({
-                    date: dateStr,
-                    totalProductSold: totalProductSoldToday
-                });
-
-                unitServiceWeekly.push({
-                    date: dateStr,
-                    totalUnitService: unitServicedToday
-                });
+                if (d.getDay() === 0) continue; // skip Sunday
+                dates.push(d.toLocaleDateString('en-CA'));
             }
         } else {
             for (let i = 6; i >= 0; i--) {
                 const d = new Date();
                 d.setDate(d.getDate() - i);
                 if (d.getDay() === 0) continue;
-                const dateStr = d.toLocaleDateString('en-CA');
-                const count = visits.filter(v => new Date(v.created_at).toLocaleDateString('en-CA') === dateStr).length;
-
-                weeklyCount.push({
-                    date: dateStr,
-                    total_visit: count
-                });
-
-                const productSoldToday = productSolds.filter(p => new Date(p.created_at).toLocaleDateString('en-CA') === dateStr);
-                const totalProductSoldToday = productSoldToday.reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0);
-
-                const unitServicedToday = unitServiceds.filter(u => new Date(u.created_at).toLocaleDateString('en-CA') === dateStr).length;
-
-                productSoldWeekly.push({
-                    date: dateStr,
-                    totalProductSold: totalProductSoldToday
-                });
-
-                unitServiceWeekly.push({
-                    date: dateStr,
-                    totalUnitService: unitServicedToday
-                });
+                dates.push(d.toLocaleDateString('en-CA'));
             }
         }
+        return dates;
+    };
 
-        const hourlyCounts = {};
-        for (let h = 9; h <= 16; h++) {
-            hourlyCounts[h] = 0;
+    const dateRange = buildDateRange();
+
+    const weeklyCount = dateRange.map(dateStr => ({
+        date: dateStr,
+        total_visit: visits.filter(v =>
+            new Date(v.created_at).toLocaleDateString('en-CA') === dateStr
+        ).length
+    }));
+
+    const productSoldWeekly = dateRange.map(dateStr => ({
+        date: dateStr,
+        total_product_sold: productSolds
+            .filter(p => new Date(p.created_at).toLocaleDateString('en-CA') === dateStr)
+            .reduce((sum, p) => sum + (p.product_sold_quantity || 0), 0)
+    }));
+
+    const unitServiceWeekly = dateRange.map(dateStr => ({
+        date: dateStr,
+        total_unit_service: unitServiceds.filter(u =>
+            new Date(u.created_at).toLocaleDateString('en-CA') === dateStr
+        ).length
+    }));
+
+    // Rush hour (09:00 - 16:00)
+    const hourlyCounts = {};
+    for (let h = 9; h <= 16; h++) hourlyCounts[h] = 0;
+
+    visits.forEach(v => {
+        const hour = new Date(v.created_at).getHours();
+        if (hour >= 9 && hour <= 16 && hourlyCounts[hour] !== undefined) {
+            hourlyCounts[hour]++;
         }
+    });
 
-        visits.forEach(v => {
-            const hour = new Date(v.created_at).getHours();
-            if (hour >= 9 && hour <= 16) {
-                if (hourlyCounts[hour] !== undefined) {
-                    hourlyCounts[hour]++;
-                }
-            }
-        });
+    const rushHour = Object.keys(hourlyCounts).map(h => {
+        const hNum = Number(h);
+        const hourStr = hNum < 10 ? '0' + hNum : '' + hNum;
+        return { hour: `${hourStr}:00`, total_visit: hourlyCounts[hNum] };
+    });
 
-        const rushHour = Object.keys(hourlyCounts).map(h => {
-            const hNum = Number(h);
-            const hourStr = hNum < 10 ? '0' + hNum : '' + hNum;
-            return {
-                hour: `${hourStr}:00`,
-                total_visit: hourlyCounts[hNum]
-            };
-        });
+    return { dailyCount, weeklyCount, productSoldWeekly, unitServiceWeekly, rushHour };
+};
 
-        return response(200, {
-            dailyCount,
-            weeklyCount,
-            productSoldWeekly,
-            unitServiceWeekly,
-            rushHour
-        }, 'Get Visit Stats Success', res);
+/* ============================
+ * STATS - All Locations
+ * ============================ */
+const getVisitStats = async (req, res, next) => {
+    try {
+        const { range } = req.query;
+        const stats = await computeVisitStats({ range, location: null });
+        return response(200, stats, 'Get Visit Stats Success', res);
+    } catch (error) {
+        return next(error);
+    }
+}
+
+/* ============================
+ * STATS - Bogor Store
+ * ============================ */
+const getVisitStatsBogor = async (req, res, next) => {
+    try {
+        const { range } = req.query;
+        const stats = await computeVisitStats({ range, location: 'bogor' });
+        return response(200, stats, 'Get Visit Stats Bogor Success', res);
+    } catch (error) {
+        return next(error);
+    }
+}
+
+/* ============================
+ * STATS - Cibubur Store
+ * ============================ */
+const getVisitStatsCibubur = async (req, res, next) => {
+    try {
+        const { range } = req.query;
+        const stats = await computeVisitStats({ range, location: 'cibubur' });
+        return response(200, stats, 'Get Visit Stats Cibubur Success', res);
     } catch (error) {
         return next(error);
     }
@@ -268,6 +298,7 @@ const getVisitDetail = async (req, res, next) => {
             visitor_category: visit.visitor?.visitor_category || null,
             visitor_company: visit.visitor?.visitor_company || null,
             visit_type: visit.visit_type,
+            visit_location: visit.visit_location ?? null,
             created_at: visit.created_at,
             visit_interest: visit.visitor_interest,
             visit_status: visit.visit_status,
@@ -293,7 +324,6 @@ const getVisitDetail = async (req, res, next) => {
                 unit_serviced_issue: u.unit_serviced_issue,
                 unit_serviced_action: u.unit_serviced_action,
                 unit_serviced_status: u.unit_serviced_status,
-                unit_serviced_id_desc: u.unit_serviced_desc,
                 unit_serviced_desc: u.unit_serviced_desc,
                 created_at: u.created_at
             }))
@@ -314,6 +344,7 @@ const createNewVisit = async (req, res, next) => {
         visitory_category,
         visitor_company,
         visit_type,
+        visit_location,
         created_at,
         interest,
         visitor_interest,
@@ -383,6 +414,7 @@ const createNewVisit = async (req, res, next) => {
                 visitor_interest: final_interest,
                 visit_status: final_status,
                 visit_type: final_type,
+                visit_location: visit_location || null,
                 visit_desc: visit_desc || null,
                 visit_sales: visit_sales || null,
                 created_at: created_at ? new Date(created_at) : new Date()
@@ -404,6 +436,7 @@ const updateVisitPut = async (req, res, next) => {
         visitory_category,
         visitor_company,
         visit_type,
+        visit_location,
         created_at,
         interest,
         visitor_interest,
@@ -442,6 +475,7 @@ const updateVisitPut = async (req, res, next) => {
         const visitData = {};
         if (user_id !== undefined) visitData.user_id = Number(user_id);
         if (visit_type !== undefined) visitData.visit_type = visit_type;
+        if (visit_location !== undefined) visitData.visit_location = visit_location;
         if (created_at !== undefined) visitData.created_at = created_at ? new Date(created_at) : null;
         const interestVal = visitor_interest !== undefined ? visitor_interest : interest;
         if (interestVal !== undefined) visitData.visitor_interest = interestVal;
@@ -480,20 +514,18 @@ const deleteVisit = async (req, res, next) => {
             prisma.visit.delete({ where: { visit_id: id } }),
         ])
 
-        return response(
-            200,
-            { visitId: id },
-            'Delete Visit Success',
-            res
-        )
+        return response(200, { visitId: id }, 'Delete Visit Success', res)
     } catch (error) {
         return next(error)
     }
 }
+
 module.exports = {
     getAllVisit,
     getVisitList,
     getVisitStats,
+    getVisitStatsBogor,
+    getVisitStatsCibubur,
     getVisitDetail,
     createNewVisit,
     updateVisitPut,
